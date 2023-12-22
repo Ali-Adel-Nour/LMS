@@ -2,7 +2,7 @@ const User = require("../models/userModel");
 
 const asyncHandler = require("express-async-handler");
 
-
+const generateToken = require("../config/jwtToken")
 //Create A User
 
 const registerAUser = asyncHandler(async(req,res)=>{
@@ -20,7 +20,11 @@ const registerAUser = asyncHandler(async(req,res)=>{
 
 
   const createUser = await User.create(req.body)
-  res.status(200).json(createUser)
+  res.status(200).json({
+    status:true,
+    message:"User create successfully",
+    createUser,
+  })
   }else{
     throw new Error("User Already Exists")
   }
@@ -28,6 +32,29 @@ const registerAUser = asyncHandler(async(req,res)=>{
 
 
 })
+//login a user
 
+const loginUser = asyncHandler(async(req,res)=>{
 
-module.exports = {registerAUser};
+  const {email,password} = req.body
+
+  //check if user exists or not
+
+  const findUser = await User.findOne({email: email})
+
+  if(findUser &&(await findUser.isPasswordMatch(password))){
+      res.status(200).json({
+        status:true,
+        message:"Logged In Successfully",
+        token:generateToken(findUser?._id),
+        role:findUser?.roles,
+        username:findUser?.firstname + " "+findUser?.lastname,
+        user_image:findUser?.user_image,
+      })
+  }else{
+    throw new Error("Invalid Creditnails")
+  }
+
+})
+
+module.exports = {registerAUser,loginUser};
