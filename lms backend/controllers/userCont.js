@@ -57,4 +57,17 @@ const loginUser = asyncHandler(async(req,res)=>{
 
 })
 
-module.exports = {registerAUser,loginUser};
+
+//Get all users
+
+const getAllUsers = asyncHandler(async(req,res)=>{
+  try{
+    const allUsers = await User.find()
+    res.status(200).json({status:true,message:"All Users Fetched successfully",allUsers})
+
+  }catch(err){
+    throw new Error(error)
+  }
+})
+
+module.exports = {registerAUser,loginUser,getAllUsers};
