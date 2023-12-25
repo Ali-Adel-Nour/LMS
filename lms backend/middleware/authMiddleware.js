@@ -1,4 +1,4 @@
-const User = require('../models/usreModel')
+const User = require('../models/userModel')
 
 const jwt = require('jsonwebtoken')
 
@@ -12,8 +12,7 @@ const authMiddleware = asyncHandler(async(req, res, next)=>{
   let token;
   // Equal to = if (req && req.headers && req.headers.authorization && req.headers.authorization.startsWith("Bearer ")
   if(req?.headers?.authorization?.startsWith("Bearer ")){
-    token = req.headers?.authorization?.split("")[1]
-
+    token = req.headers?.authorization?.split(" ")[1];
     try{
       if(token){
         const decoded = jwt.verify(token,process.env.JWT_SECRET)
@@ -51,4 +50,4 @@ const isInstructor = asyncHandler(async(req, res, next)=>{
   }
 })
 
-module.export = {authMiddleware,isAdmin,isInstructor}
+module.exports = {authMiddleware,isAdmin,isInstructor}
