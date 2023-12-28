@@ -97,4 +97,20 @@ const updateUser = asyncHandler(async (req, res) => {
     throw new Error(err);
   }
 });
-module.exports = {registerAUser,loginUser,getAllUsers,updateUser };
+
+
+//delete a user
+
+const deleteUser = asyncHandler(async(req, res )=>{
+  const { _id } = req.params;
+  try {
+     await User.findByIdAndDelete(id);
+
+    res.status(200).json({ status: true, message: 'User Deleted successfully' });
+  } catch (err) {
+    throw new Error(err);
+  }
+})
+
+
+module.exports = {registerAUser,loginUser,getAllUsers,updateUser,deleteUser };

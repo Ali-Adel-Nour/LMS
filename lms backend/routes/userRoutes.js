@@ -3,7 +3,8 @@ const express = require('express');
 const {registerAUser,
   loginUser,
   getAllUsers,
-  updateUser
+  updateUser,
+  deleteUser,
 
 } = require('../controllers/userCont')
 
@@ -25,5 +26,7 @@ userRouter.get("/all-users",isAdmin,getAllUsers)
 userRouter.put("/update-profile",authMiddleware,updateUser)
 
 
+//delete
 
+userRouter.delete("/:id",authMiddleware,isAdmin,deleteUser)
 module.exports = userRouter
