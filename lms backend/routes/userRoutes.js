@@ -28,5 +28,5 @@ userRouter.put("/update-profile",authMiddleware,updateUser)
 
 //delete
 
-userRouter.delete("/:id",authMiddleware,isAdmin,deleteUser)
+userRouter.delete("/:_id",authMiddleware,isAdmin,deleteUser)
 module.exports = userRouter
