@@ -71,7 +71,17 @@ const getAllUsers = asyncHandler(async(req,res)=>{
   }
 })
 
+const getAUser = asyncHandler(async(req,res)=>{
+  const id = req.params
+  try {
+    const getProfile =await User.findById(id);
 
+   res.status(200).json({ status: true, message: 'User Found',getProfile });
+ } catch (err) {
+   throw new Error(err);
+ }
+}
+)
 
 //Update user profile
 
@@ -104,6 +114,7 @@ const updateUser = asyncHandler(async (req, res) => {
 const deleteUser = asyncHandler(async(req, res )=>{
   const { _id } = req.params;
   //console.log('User ID to be deleted:', _id);
+  //validateMongodbId(_id)
   try {
      await User.findByIdAndDelete(_id);
 
@@ -113,5 +124,11 @@ const deleteUser = asyncHandler(async(req, res )=>{
   }
 })
 
+//Block A user
 
-module.exports = {registerAUser,loginUser,getAllUsers,updateUser,deleteUser };
+const blockUser = asyncHandler(async(req, res)=>{
+
+
+})
+
+module.exports = {registerAUser,loginUser,getAllUsers,getAUser,updateUser,deleteUser, };

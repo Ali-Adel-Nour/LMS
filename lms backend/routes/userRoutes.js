@@ -3,6 +3,7 @@ const express = require('express');
 const {registerAUser,
   loginUser,
   getAllUsers,
+  getAUser,
   updateUser,
   deleteUser,
 
@@ -12,13 +13,17 @@ const {isAdmin,authMiddleware} = require('../middleware/authMiddleware');
 
 const userRouter = express.Router()
 
-//post all routes
+//Post all routes
 userRouter.post("/register",registerAUser)
 userRouter.post("/login",loginUser)
 
 
-//get all routes
+//Get all routes
 userRouter.get("/all-users",isAdmin,getAllUsers)
+
+
+//Get A user
+userRouter.get("/:_id",authMiddleware,getAUser)
 
 
 //update(put) all routes
@@ -26,7 +31,7 @@ userRouter.get("/all-users",isAdmin,getAllUsers)
 userRouter.put("/update-profile",authMiddleware,updateUser)
 
 
-//delete
+//Delete
 
 userRouter.delete("/:_id",authMiddleware,isAdmin,deleteUser)
 module.exports = userRouter
