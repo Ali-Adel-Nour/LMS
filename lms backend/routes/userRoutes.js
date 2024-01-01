@@ -6,6 +6,8 @@ const {registerAUser,
   getAUser,
   updateUser,
   deleteUser,
+  blockUser,
+  unblockUser
 
 } = require('../controllers/userCont')
 
@@ -26,12 +28,20 @@ userRouter.get("/all-users",isAdmin,getAllUsers)
 userRouter.get("/:_id",authMiddleware,getAUser)
 
 
-//update(put) all routes
+//all (put) routes
 
 userRouter.put("/update-profile",authMiddleware,updateUser)
 
+userRouter.put("/block/:id",authMiddleware,isAdmin,blockUser)
+
+userRouter.put("/unblock/:id",authMiddleware,isAdmin,unblockUser)
 
 //Delete
 
 userRouter.delete("/:_id",authMiddleware,isAdmin,deleteUser)
+
+
+
+
+//Unblock User
 module.exports = userRouter

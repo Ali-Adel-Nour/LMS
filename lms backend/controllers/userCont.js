@@ -67,7 +67,7 @@ const getAllUsers = asyncHandler(async(req,res)=>{
     res.status(200).json({status:true,message:"All Users Fetched successfully",allUsers})
 
   }catch(err){
-    throw new Error(error)
+    throw new Error(err)
   }
 })
 
@@ -114,7 +114,7 @@ const updateUser = asyncHandler(async (req, res) => {
 const deleteUser = asyncHandler(async(req, res )=>{
   const { _id } = req.params;
   //console.log('User ID to be deleted:', _id);
-  //validateMongodbId(_id)
+  validateMongodbId(_id)
   try {
      await User.findByIdAndDelete(_id);
 
@@ -127,8 +127,29 @@ const deleteUser = asyncHandler(async(req, res )=>{
 //Block A user
 
 const blockUser = asyncHandler(async(req, res)=>{
-
-
+const {id} = req.params;
+validateMongodbId(id)
+try{
+  const block = await User.findByIdAndUpdate(id,{isBlocked: true,new:true});
+  res.status(200).json({ status: true, message:'User Block successfully'})
+}catch (err) {
+  throw new Error(err);
+}
 })
 
-module.exports = {registerAUser,loginUser,getAllUsers,getAUser,updateUser,deleteUser, };
+
+//Unblock A user
+
+const unblockUser = asyncHandler(async(req, res)=>{
+  const {id} = req.params;
+  validateMongodbId(id)
+  try{
+    const unblock = await User.findByIdAndUpdate(id,{isBlocked:false,new:true});
+    res.status(200).json({ status: true, message:'User Unblocked successfully'})
+  }catch (err) {
+    throw new Error(err);
+  }
+  })
+
+
+module.exports = {registerAUser,loginUser,getAllUsers,getAUser,updateUser,deleteUser,blockUser,unblockUser };
