@@ -151,5 +151,25 @@ const unblockUser = asyncHandler(async(req, res)=>{
   }
   })
 
+const updatePassword = asyncHandler(async(req, res)=>{
+  const {_id} = req.user;
+  const {password} = req.body
+  validateMongodbId(_id)
+  try{
+    const user = await User.findById(_id)
+    if(user && password &&(await user.isPasswordMatch(password))){
+      throw new Error("Please provide a new password insted of old one")
+    }else{
+      user.password = password
+     await user.save()
+     console.log(user.password)
+     res.status(200).json({ status: true, message:"Password updated successfully" })
+    }
 
-module.exports = {registerAUser,loginUser,getAllUsers,getAUser,updateUser,deleteUser,blockUser,unblockUser };
+  }catch(err){
+    throw new Error(err)
+  }
+})
+
+
+module.exports = {registerAUser,loginUser,getAllUsers,getAUser,updateUser,deleteUser,blockUser,unblockUser,updatePassword };

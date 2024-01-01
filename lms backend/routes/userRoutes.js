@@ -7,7 +7,8 @@ const {registerAUser,
   updateUser,
   deleteUser,
   blockUser,
-  unblockUser
+  unblockUser,
+  updatePassword
 
 } = require('../controllers/userCont')
 
@@ -35,6 +36,8 @@ userRouter.put("/update-profile",authMiddleware,updateUser)
 userRouter.put("/block/:id",authMiddleware,isAdmin,blockUser)
 
 userRouter.put("/unblock/:id",authMiddleware,isAdmin,unblockUser)
+
+userRouter.put("/update-password",authMiddleware,updatePassword)
 
 //Delete
 
