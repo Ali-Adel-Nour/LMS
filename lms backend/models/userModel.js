@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 
 const bcrypt = require('bcrypt');
 
+const crypto = require('crypto');
+
 let userSchema = new mongoose.Schema({
     firstname: {
         type: String,
@@ -72,5 +74,14 @@ userSchema.pre("save",async function(next){
 
 userSchema.methods.isPasswordMatch = async function (enteredPassword){
   return  await bcrypt.compare(enteredPassword, this.password)
+}
+
+
+userSchema.methods.createPasswordResetToken = async function(){
+  const resetToken = crypto.randomBytes(32).toString("hex")
+  this.passwordResetToken = crypto.createHash("sha256").update(resetToken)
+  .digest("hex")
+  this.passwordResetExpires = Date.now() + 30 * 60 * 1000 ; //10 minutes
+  return resetToken
 }
 module.exports = mongoose.model("User",userSchema)
