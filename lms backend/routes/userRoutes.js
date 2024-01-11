@@ -25,7 +25,7 @@ userRouter.post('/forgot-password',forgotPasswordToken);
 
 
 //Get all routes
-userRouter.get('/all-users', isAdmin, getAllUsers);
+userRouter.get('/all-users',  authMiddleware,isAdmin, getAllUsers);
 
 userRouter.get('/:_id', authMiddleware, getAUser);
 
