@@ -4,9 +4,14 @@ const app = express();
 const dotenv = require('dotenv').config();
 const dbConnect = require('./config/dbConfig');
 const userRouter = require('./routes/userRoutes');
+const googleRouter = require('./routes/googleRoutes');
+const session = require('express-session');
+const MongoStore = require('connect-mongo');
+const passport = require('passport')
+const passportSetup = require("./utils/passport");
 
 app.get("/", (req, res) => {
-  res.send("Hello From LMS Job Portal Server");
+  res.send(`<a href="http://localhost:4000/google">Login with google</a>`);
 });
 
 app.use(session({
@@ -19,11 +24,14 @@ app.use(session({
   })
 }));
 
+
+app.use(passport.initialize());
+app.use(passport.session());
 // body-parser with built-in Express middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use("/api/v1/user", userRouter);
-
+app.use("/",googleRouter)
 app.use(notFound);
 app.use(handleError);
 
