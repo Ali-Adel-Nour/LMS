@@ -50,7 +50,7 @@ let userSchema = new mongoose.Schema({
       type:Boolean,
       default:false,
     },
-    passowrdChangedAt: Date,
+    passwordChangedAt: Date,
     passwordResetToken:String,
     passwordResetExpires:Date,
     stripe_account_id:String,

@@ -5,6 +5,7 @@ const dotenv = require('dotenv').config();
 const dbConnect = require('./config/dbConfig');
 const userRouter = require('./routes/userRoutes');
 const googleRouter = require('./routes/googleRoutes');
+const tutCatRouter = require('./routes/tutCatRoutes');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const passport = require('passport')
@@ -32,6 +33,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use("/api/v1/user", userRouter);
 app.use("/",googleRouter)
+app.use("api/v1/tutorial/category", tutCatRouter);
 app.use(notFound);
 app.use(handleError);
 

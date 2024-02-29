@@ -10,7 +10,22 @@ const expressAsyncHandler = require("express-async-handler")
 googleRouter.get(
   "/login/success",
   expressAsyncHandler(async (req, res) => {
-    res.status(200).json({status:false , message:"Login Success"})
+    if(req.user){
+      const findUser = await User.findOne({email: req.user.email})
+      if(findUser){
+        res.status(200).json({
+          status: true,
+          message: 'Logged In Successfully',
+          token: generateToken(findUser?._id),
+          role: findUser?.roles,
+          username: findUser?.firstname + ' ' + findUser?.lastname,
+          user_image: findUser?.user_image,
+          from:"google"
+        })
+      }
+    }else{
+      throw Error("Something went wrong")
+    }
   })
 )
   googleRouter.get(
@@ -32,7 +47,7 @@ res.status(401).json({status:false , message:"Login Failed"})
     "/auth/google/callback",
   passport.authenticate("google",{
       successRedirect:"/login/success",
-      failureRedirct: "/login/failed",
+      failureRedirect: "/login/failed",
   })
 
   )
