@@ -33,7 +33,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use("/api/v1/user", userRouter);
 app.use("/",googleRouter)
-app.use("api/v1/tutorial/category", tutCatRouter);
+app.use("/api/v1/tutorial/category", tutCatRouter);
 app.use(notFound);
 app.use(handleError);
 

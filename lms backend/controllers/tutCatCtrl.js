@@ -1,6 +1,7 @@
 const TutotrialCategory = require('../models/tutCategory');
-
+const {default: slugify} = require('slugify')
 const asyncHandler = require('express-async-handler');
+
 
 const postTutorialCategory = asyncHandler(async (req, res) => {
     try {
