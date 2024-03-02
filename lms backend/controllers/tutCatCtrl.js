@@ -19,4 +19,9 @@ const postTutorialCategory = asyncHandler(async (req, res) => {
     }
 });
 
+
+//const getAllCategory = asyncHandler(req, res) => {})
+
+
+
 module.exports = {postTutorialCategory}

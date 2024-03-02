@@ -79,6 +79,7 @@ const getAUser = asyncHandler(async (req, res) => {
             message: 'User Found',
             getProfile,
         });
+        console.log(id)
     } catch (err) {
         throw new Error(err);
     }
@@ -139,10 +140,10 @@ const blockUser = asyncHandler(async (req, res) => {
     const { id } = req.params;
     validateMongodbId(id);
     try {
-        const block = await User.findByIdAndUpdate(id, {
-            isBlocked: true,
-            new: true,
-        });
+        const block = await User.findByIdAndUpdate(id,
+            {isblocked: true},
+            {new: true},
+        );
         res.status(200).json({
             status: true,
             message: 'User Block successfully',
@@ -158,10 +159,10 @@ const unblockUser = asyncHandler(async (req, res) => {
     const { id } = req.params;
     validateMongodbId(id);
     try {
-        const unblock = await User.findByIdAndUpdate(id, {
-            isBlocked: false,
-            new: true,
-        });
+        const unblock = await User.findByIdAndUpdate(id,
+            { isblocked: false},
+            { new: true},
+        );
         res.status(200).json({
             status: true,
             message: 'User Unblocked successfully',
