@@ -46,5 +46,5 @@ userRouter.put('/reset-password/:token',  resetPassword);
 
 userRouter.delete('/:_id', authMiddleware, isAdmin, deleteUser);
 
-//Unblock User
+
 module.exports = userRouter;
