@@ -22,7 +22,7 @@ const subscribe= asyncHandler(async(req,res)=>{
   try{
 
     const {id} = req.params;
-
+    validateMongodbId(id);
 
    const removeEmail = await NewsLetter.findByIdAndDelete(id)
    res.status(200).json({status:true, message:'Unsubscribed To NewsLetter'})
