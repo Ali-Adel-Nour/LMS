@@ -7,6 +7,7 @@ const userRouter = require('./routes/userRoutes');
 const googleRouter = require('./routes/googleRoutes');
 const tutCatRouter = require('./routes/tutCatRoutes');
 const tutorialRouter= require('./routes/tutorialRoutes');
+const newsLetterRouter = require('./routes/newsLetterRoutes');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const passport = require('passport')
@@ -36,6 +37,7 @@ app.use("/api/v1/user", userRouter);
 app.use("/",googleRouter)
 app.use("/api/v1/tutorial/category", tutCatRouter);
 app.use("/api/v1/tutorial", tutorialRouter);
+app.use("/api/v1/newsletter", newsLetterRouter);
 app.use(notFound);
 app.use(handleError);
 
