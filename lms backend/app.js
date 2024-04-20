@@ -8,6 +8,7 @@ const googleRouter = require('./routes/googleRoutes');
 const tutCatRouter = require('./routes/tutCatRoutes');
 const tutorialRouter= require('./routes/tutorialRoutes');
 const newsLetterRouter = require('./routes/newsLetterRoutes');
+const reviewRouter = require('./routes/reviewRoutes');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const passport = require('passport')
@@ -32,12 +33,13 @@ app.use(passport.initialize());
 app.use(passport.session());
 // body-parser with built-in Express middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 app.use("/api/v1/user", userRouter);
 app.use("/",googleRouter)
 app.use("/api/v1/tutorial/category", tutCatRouter);
 app.use("/api/v1/tutorial", tutorialRouter);
 app.use("/api/v1/newsletter", newsLetterRouter);
+app.use("/api/v1/review", reviewRouter);
 app.use(notFound);
 app.use(handleError);
 
