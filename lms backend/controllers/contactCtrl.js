@@ -7,7 +7,7 @@ const validateMongodbId = require('../config/valditeMongodb');
 
 const createContact = asyncHandler(async (req, res) => {
 
-const review =  await Review.create(req.body)
+const contact =  await Contact.create(req.body)
 
 
 res.status(200).json({
@@ -18,7 +18,16 @@ res.status(200).json({
 })
 
 
+const getAllContacts = asyncHandler(async(req,res)=>{
+  const contacts =await Contact.find()
 
+
+  res.status(200).json({
+    status: true,
+    message: 'Contacts Fetched Successfully',
+    contacts,
+  })
+})
 
 
 const getSingleContact = asyncHandler(async (req, res) => {
@@ -42,7 +51,7 @@ const updateContact = asyncHandler(async (req, res) => {
   const {id} = req.params;
   validateMongodbId(id);
 
-  const conatct =  await Contact.findByIdAndUpdate(id,req.body,{new:true})
+  const contact =  await Contact.findByIdAndUpdate(id,req.body,{new:true})
 
 
   res.status(200).json({
@@ -69,3 +78,12 @@ const updateContact = asyncHandler(async (req, res) => {
     })
 
     })
+
+    module.exports = {
+      createContact,
+      getAllContacts,
+      getSingleContact,
+      updateContact,
+      deleteContact
+
+    }

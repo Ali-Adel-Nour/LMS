@@ -2,8 +2,14 @@ const mongoose = require('mongoose');
 
 let contactSchema = new mongoose.Schema(
     {
+        name:{
+             type: String,
+            required:true,
+            index: true,
+        },
         email: {
             type: String,
+            required:true,
             index: true,
         },
         mobile: {
@@ -27,7 +33,7 @@ let contactSchema = new mongoose.Schema(
         },
         status:{
           type: String,
-          default:Submitted,
+          default:"Submitted",
         }
     },
     {
@@ -35,4 +41,4 @@ let contactSchema = new mongoose.Schema(
     }
 );
 
-module.exports = mongoose.model('Contact', reviewSchema);
+module.exports = mongoose.model('Contact', contactSchema);
