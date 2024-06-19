@@ -70,7 +70,7 @@ const getSingleDoc = asyncHandler (async(req,res)=>{
 
 
 const deleteADoc = asyncHandler (async(req,res)=>{
-  const {id} = req.parms
+  const {id} = req.params
   validateMongodbId(id);
   try{
 
@@ -89,7 +89,7 @@ const deleteADoc = asyncHandler (async(req,res)=>{
 
 
 const updateADoc = asyncHandler (async(req,res)=>{
-  const {id} = req.parms
+  const {id} = req.params
   validateMongodbId(id);
   try{
 
@@ -102,6 +102,7 @@ const updateADoc = asyncHandler (async(req,res)=>{
     res.status(200).json({
       status: true,
       message: 'Document Updated Successfully',
+      doc
     })
 
   }catch(err){
