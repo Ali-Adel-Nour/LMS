@@ -47,7 +47,7 @@ app.use("/api/v1/newsletter", newsLetterRouter);
 app.use("/api/v1/review", reviewRouter);
 app.use("/api/v1/contact", contactRouter);
 app.use("/api/v1/video", videoRouter);
-app.use("/api/v1/documention", docRouter);
+app.use("/api/v1/documentation", docRouter);
 app.use(notFound);
 app.use(handleError);
 
