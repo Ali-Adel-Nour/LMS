@@ -31,8 +31,8 @@ userRouter.get('/:_id', authMiddleware, getAUser);
 
 //all (put) routes
 
-userRouter.put('/update-profile', authMiddleware, updateUser);
 
+userRouter.put('/update-profile', authMiddleware, updateUser);
 userRouter.put('/block/:id', authMiddleware, isAdmin, blockUser);
 
 userRouter.put('/unblock/:id', authMiddleware, isAdmin, unblockUser);
