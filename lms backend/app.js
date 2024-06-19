@@ -10,6 +10,10 @@ const tutorialRouter= require('./routes/tutorialRoutes');
 const newsLetterRouter = require('./routes/newsLetterRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
 const contactRouter = require('./routes/contactRoutes');
+
+const videoRouter = require('./routes/videoRoutes');
+
+const docRouter = require('./routes/docRoutes');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const passport = require('passport')
@@ -42,6 +46,8 @@ app.use("/api/v1/tutorial", tutorialRouter);
 app.use("/api/v1/newsletter", newsLetterRouter);
 app.use("/api/v1/review", reviewRouter);
 app.use("/api/v1/contact", contactRouter);
+app.use("/api/v1/video", videoRouter);
+app.use("/api/v1/documention", docRouter);
 app.use(notFound);
 app.use(handleError);
 
