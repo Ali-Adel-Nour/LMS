@@ -11,7 +11,7 @@ docRouter.post("/", authMiddleware, isAdmin, postADoc);
 
 docRouter.get("/all", authMiddleware, isAdmin, getAllDocs);
 
-docRouter.get("/:id", authMiddleware, isAdmin, getSingleDoc);
+docRouter.get("/:slug", authMiddleware, isAdmin, getSingleDoc);
 
 
 docRouter.put("/:id/edit", authMiddleware, isAdmin, updateADoc);

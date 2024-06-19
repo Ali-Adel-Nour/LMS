@@ -1,4 +1,4 @@
-const Document = require('../models/documentaionModel')
+const Document = require('../models/documentationModel');
 const asyncHandler = require('express-async-handler');
 const validateMongodbId = require('../config/valditeMongodb');
 
@@ -12,7 +12,7 @@ const postADoc = asyncHandler (async(req,res)=>{
     if(req.body.title){
       req.body.slug = slugify(req.body.title.toLowerCase())
     }
-  const document = await Document.Create(req.body)
+  const document = await Document.create(req.body)
 
 
   res.status(200).json({
@@ -36,8 +36,10 @@ const getAllDocs = asyncHandler (async(req,res)=>{
     const doc = await Document.find()
 
     res.status(200).json({
+
       status: true,
       message: 'All Documents Fetched Successfully',
+      doc
     })
 
   }catch(err){
@@ -50,7 +52,7 @@ const getAllDocs = asyncHandler (async(req,res)=>{
 //Get single doc
 
 const getSingleDoc = asyncHandler (async(req,res)=>{
-  const {slug} = req.parms
+  const {slug} = req.params
   try{
 
     const doc = await Document.findOne({slug:slug})
@@ -58,6 +60,7 @@ const getSingleDoc = asyncHandler (async(req,res)=>{
     res.status(200).json({
       status: true,
       message: 'Document Fetched Successfully',
+      doc
     })
 
   }catch(err){
