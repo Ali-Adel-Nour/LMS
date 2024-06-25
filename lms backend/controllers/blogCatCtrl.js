@@ -27,7 +27,7 @@ const postBlogCategory = asyncHandler (async(req,res)=>{
 //Get all docs
 
 
-const getAllBlogsCatgories = asyncHandler (async(req,res)=>{
+const getAllBlogsCategories = asyncHandler (async(req,res)=>{
   try{
 
     const blogCategory= await BlogCat.find()

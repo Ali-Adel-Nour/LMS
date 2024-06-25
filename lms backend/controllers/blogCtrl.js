@@ -5,7 +5,7 @@ const validateMongodbId = require('../config/valditeMongodb');
 const {default:slugify} = require("slugify")
 
 
-const postABlog = asyncHandler (async(req,res)=>{
+const postBlog = asyncHandler (async(req,res)=>{
 
   try{
 

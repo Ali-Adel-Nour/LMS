@@ -110,7 +110,7 @@ const updateDocCategory= asyncHandler (async(req,res)=>{
 
 module.exports = {
   postDocCategory,
-  getAllDocsCategories,
+  getAllDocsCatgories,
   getSingleDocCategory,
   deleteDocCategory,
   updateDocCategory,

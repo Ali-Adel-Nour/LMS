@@ -1,23 +1,23 @@
 const {
   postDocCategory,
-  getAllDocsCategories,
+  getAllDocsCatgories,
   getSingleDocCategory,
   deleteDocCategory,
   updateDocCategory,
-} = require("../controllers/documentaionCtrl")
+} = require("../controllers/docCatCtrl")
 const { isAdmin, authMiddleware } = require('../middleware/authMiddleware');
 const docCatRouter = require('express').Router();
 
 
-docRouter.post("/", authMiddleware, isAdmin, postDocCategory);
+docCatRouter.post("/", authMiddleware, isAdmin, postDocCategory);
 
-docRouter.get("/all", authMiddleware, isAdmin,  getAllDocsCategories);
+docCatRouter.get("/all", authMiddleware, isAdmin,  getAllDocsCatgories);
 
-docRouter.get("/:slug", authMiddleware, isAdmin, getSingleDocCategory);
+docCatRouter.get("/:slug", authMiddleware, isAdmin, getSingleDocCategory);
 
 
-docRouter.put("/:id/edit", authMiddleware, isAdmin, updateDocCategory);
+docCatRouter.put("/:id/edit", authMiddleware, isAdmin, updateDocCategory);
 
-docRouter.delete("/:id", authMiddleware, isAdmin, deleteDocCategory);
+docCatRouter.delete("/:id", authMiddleware, isAdmin, deleteDocCategory);
 
 module.exports =  docCatRouter

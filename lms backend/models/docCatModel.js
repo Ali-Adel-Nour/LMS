@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 let docCatSchema = new mongoose.Schema(
   {
       title: {

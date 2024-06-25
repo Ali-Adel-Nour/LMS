@@ -14,11 +14,12 @@ const contactRouter = require('./routes/contactRoutes');
 const videoRouter = require('./routes/videoRoutes');
 
 const docRouter = require('./routes/docRoutes');
+
 const docCatRouter = require('./routes/docCatRoutes');
 
-const blogRouter = require('../routes/blogRoutes');
+const blogRouter = require('./routes/blogRoutes');
 
-const blogCatRouter = require('../routes/blogCatRoutes');
+const blogCatRouter = require('./routes/blogCatRoutes');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const passport = require('passport');
