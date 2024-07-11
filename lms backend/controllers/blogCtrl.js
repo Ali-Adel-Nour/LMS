@@ -33,13 +33,13 @@ const postBlog = asyncHandler (async(req,res)=>{
 const getAllBlogs = asyncHandler (async(req,res)=>{
   try{
 
-    const blog= await Blog.find()
+    const blogs= await Blog.find()
 
     res.status(200).json({
 
       status: true,
       message: 'All Blogs Fetched Successfully',
-      doc
+      blogs
     })
 
   }catch(err){
@@ -60,7 +60,8 @@ const getSingleBlog = asyncHandler (async(req,res)=>{
     res.status(200).json({
       status: true,
       message: 'Blog Fetched Successfully',
-      doc
+      blog
+
     })
 
   }catch(err){
@@ -102,7 +103,7 @@ const updateBlog = asyncHandler (async(req,res)=>{
     res.status(200).json({
       status: true,
       message: 'Blog Updated Successfully',
-      doc
+
     })
 
   }catch(err){
