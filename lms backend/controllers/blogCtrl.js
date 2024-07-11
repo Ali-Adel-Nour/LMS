@@ -35,6 +35,15 @@ const getAllBlogs = asyncHandler (async(req,res)=>{
 
     const blogs= await Blog.find()
 
+    if(!blogs){
+
+      res.status(400).json({
+        status: false,
+        message: 'No Blog In Database',
+      })
+
+    }
+
     res.status(200).json({
 
       status: true,
@@ -57,6 +66,15 @@ const getSingleBlog = asyncHandler (async(req,res)=>{
 
     const blog= await Blog.findOne({slug:slug})
 
+    if(!blog){
+
+      res.status(400).json({
+        status: false,
+        message: 'Blog not found',
+      })
+
+    }
+
     res.status(200).json({
       status: true,
       message: 'Blog Fetched Successfully',
@@ -76,6 +94,15 @@ const deleteBlog = asyncHandler (async(req,res)=>{
   try{
 
     const blog= await Blog.findByIdAndDelete(id)
+
+    if(!blog){
+
+      res.status(400).json({
+        status: false,
+        message: 'Blog not found',
+      })
+
+    }
 
     res.status(200).json({
       status: true,
@@ -99,6 +126,16 @@ const updateBlog = asyncHandler (async(req,res)=>{
     }
 
     const blog= await Blog.findByIdAndUpdate(id,req.body,{new:true})
+
+
+       if(!blog){
+
+      res.status(400).json({
+        status: false,
+        message: 'Blog not found',
+      })
+
+    }
 
     res.status(200).json({
       status: true,
