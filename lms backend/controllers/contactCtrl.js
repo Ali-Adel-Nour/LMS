@@ -21,6 +21,12 @@ res.status(200).json({
 const getAllContacts = asyncHandler(async(req,res)=>{
   const contacts =await Contact.find()
 
+  if(!contacts){
+    res.status(404).json({
+      status:false,
+      message:'Contact Not Found'
+    })
+  }
 
   res.status(200).json({
     status: true,
@@ -34,13 +40,19 @@ const getSingleContact = asyncHandler(async (req, res) => {
   const {id} = req.params;
   validateMongodbId(id);
 
-  const review =  await Contact.findById(id)
+  const contact =  await Contact.findById(id)
 
+  if(!contact){
+    res.status(404).json({
+      status:false,
+      message:'Contact Not Found'
+    })
+  }
 
   res.status(200).json({
     status: true,
     message: ' Fetched Successfully',
-   review,
+   contact,
   })
 
   })
@@ -53,6 +65,12 @@ const updateContact = asyncHandler(async (req, res) => {
 
   const contact =  await Contact.findByIdAndUpdate(id,req.body,{new:true})
 
+  if(!contact){
+    res.status(404).json({
+      status:false,
+      message:'Contact Not Found'
+    })
+  }
 
   res.status(200).json({
     status: true,
@@ -70,6 +88,13 @@ const updateContact = asyncHandler(async (req, res) => {
 
     const contact =  await Contact.findByIdAndDelete(id)
 
+
+    if(!contact){
+      res.status(404).json({
+        status:false,
+        message:'Contact Not Found'
+      })
+    }
 
     res.status(200).json({
       status: true,

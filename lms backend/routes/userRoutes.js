@@ -16,35 +16,37 @@ const {
 
 const { isAdmin, authMiddleware } = require('../middleware/authMiddleware');
 
+const rateLimter = require("../middleware/rateLimiter")
+
 const userRouter = express.Router();
 
 //Post all routes
-userRouter.post('/register', registerAUser);
-userRouter.post('/login', loginUser);
-userRouter.post('/forgot-password',forgotPasswordToken);
+userRouter.post('/register', rateLimter, registerAUser);
+userRouter.post('/login', rateLimter, loginUser);
+userRouter.post('/forgot-password', rateLimter, forgotPasswordToken);
 
 
 //Get all routes
-userRouter.get('/all-users',  authMiddleware,isAdmin, getAllUsers);
+userRouter.get('/all-users', authMiddleware, isAdmin,rateLimter, getAllUsers);
 
-userRouter.get('/:_id', authMiddleware, getAUser);
+userRouter.get('/:_id', authMiddleware,rateLimter, getAUser);
 
 //all (put) routes
 
 
-userRouter.put('/update-profile', authMiddleware, updateUser);
-userRouter.put('/block/:id', authMiddleware, isAdmin, blockUser);
+userRouter.put('/update-profile', authMiddleware, rateLimter, updateUser);
+userRouter.put('/block/:id', authMiddleware, isAdmin, rateLimter, blockUser);
 
-userRouter.put('/unblock/:id', authMiddleware, isAdmin, unblockUser);
+userRouter.put('/unblock/:id', authMiddleware, isAdmin, rateLimter, unblockUser);
 
-userRouter.put('/update-password', authMiddleware, updatePassword);
+userRouter.put('/update-password', authMiddleware, rateLimter, updatePassword);
 
-userRouter.put('/reset-password/:token',  resetPassword);
+userRouter.put('/reset-password/:token', rateLimter, resetPassword);
 
 
 //Delete
 
-userRouter.delete('/:_id', authMiddleware, isAdmin, deleteUser);
+userRouter.delete('/:_id', authMiddleware, isAdmin, rateLimter, deleteUser);
 
 
 module.exports = userRouter;

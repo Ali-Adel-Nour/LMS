@@ -6,18 +6,18 @@ const {
   updateDocCategory,
 } = require("../controllers/docCatCtrl")
 const { isAdmin, authMiddleware } = require('../middleware/authMiddleware');
+const rateLimter = require("../middleware/rateLimiter")
 const docCatRouter = require('express').Router();
 
 
-docCatRouter.post("/", authMiddleware, isAdmin, postDocCategory);
+docCatRouter.post("/", authMiddleware, isAdmin, rateLimter, postDocCategory);
 
-docCatRouter.get("/all", authMiddleware, isAdmin,  getAllDocsCatgories);
+docCatRouter.get("/all", authMiddleware, isAdmin, rateLimter, getAllDocsCatgories);
 
-docCatRouter.get("/:slug", authMiddleware, isAdmin, getSingleDocCategory);
+docCatRouter.get("/:slug", authMiddleware, isAdmin, rateLimter, getSingleDocCategory);
 
+docCatRouter.put("/:id/edit", authMiddleware, isAdmin, rateLimter, updateDocCategory);
 
-docCatRouter.put("/:id/edit", authMiddleware, isAdmin, updateDocCategory);
-
-docCatRouter.delete("/:id", authMiddleware, isAdmin, deleteDocCategory);
+docCatRouter.delete("/:id", authMiddleware, isAdmin, rateLimter, deleteDocCategory);
 
 module.exports =  docCatRouter

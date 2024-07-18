@@ -97,7 +97,7 @@ const deleteBlog = asyncHandler (async(req,res)=>{
 
     if(!blog){
 
-      res.status(400).json({
+      res.status(404).json({
         status: false,
         message: 'Blog not found',
       })

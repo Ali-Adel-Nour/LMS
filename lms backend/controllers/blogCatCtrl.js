@@ -32,6 +32,13 @@ const getAllBlogsCategories = asyncHandler (async(req,res)=>{
 
     const blogCategory= await BlogCat.find()
 
+    if(!blogCategory)
+{
+  res.status(404).json({
+    status:false,
+    message: 'Blog Category Not Found'
+  })
+}
     res.status(200).json({
 
       status: true,
@@ -54,6 +61,13 @@ const getSingleBlogCategory = asyncHandler (async(req,res)=>{
 
     const blogCategory= await BlogCat.findOne({id})
 
+    if(!blogCategory){
+      res.status(404).json({
+        status:false,
+        message: 'No Blog Category with This Id'
+      })
+    }
+
     res.status(200).json({
       status: true,
       message: 'Blog Category Fetched Successfully',
@@ -72,6 +86,13 @@ const deleteBlogCategory = asyncHandler (async(req,res)=>{
   try{
 
     const blogCategory= await BlogCat.findByIdAndDelete(id)
+
+    if(!blogCategory){
+      res.status(404).json({
+        status:false,
+        message: 'No Blog Category with This Id'
+      })
+    }
 
     res.status(200).json({
       status: true,
