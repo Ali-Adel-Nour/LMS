@@ -1,8 +1,8 @@
-const {postADoc,
+const { postADoc,
   getAllDocs,
   getSingleDoc,
   deleteADoc,
-  updateADoc,} = require("../controllers/documentaionCtrl")
+  updateADoc, } = require("../controllers/documentaionCtrl")
 const { isAdmin, authMiddleware } = require('../middleware/authMiddleware');
 const rateLimter = require("../middleware/rateLimiter")
 const docRouter = require('express').Router();

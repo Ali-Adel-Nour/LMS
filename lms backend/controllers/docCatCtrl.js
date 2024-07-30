@@ -3,34 +3,30 @@ const asyncHandler = require('express-async-handler');
 const validateMongodbId = require('../config/valditeMongodb');
 
 
+const postDocCategory = asyncHandler(async (req, res) => {
+
+  try {
+
+    const docCategory = await DocCat.create(req.body)
 
 
-const postDocCategory = asyncHandler (async(req,res)=>{
-
-  try{
-
-  const docCategory= await DocCat.create(req.body)
-
-
-  res.status(200).json({
-    status: true,
-    message: 'Documentation Category Created Successfully',
-  })
-}catch (err) {
-  throw new Error(err)
-}
+    res.status(200).json({
+      status: true,
+      message: 'Documentation Category Created Successfully',
+    })
+  } catch (err) {
+    throw new Error(err)
+  }
 });
 
 
 
 
-//Get all docs
 
+const getAllDocsCatgories = asyncHandler(async (req, res) => {
+  try {
 
-const getAllDocsCatgories = asyncHandler (async(req,res)=>{
-  try{
-
-    const docCategory= await DocCat.find()
+    const docCategory = await DocCat.find()
 
     res.status(200).json({
 
@@ -39,20 +35,19 @@ const getAllDocsCatgories = asyncHandler (async(req,res)=>{
       doc
     })
 
-  }catch(err){
+  } catch (err) {
     throw new Error(err)
   }
 })
 
 
 
-//Get single doc
 
-const getSingleDocCategory= asyncHandler (async(req,res)=>{
-  const {id} = req.params
-  try{
+const getSingleDocCategory = asyncHandler(async (req, res) => {
+  const { id } = req.params
+  try {
 
-    const docCategory= await DocCat.findOne({id})
+    const docCategory = await DocCat.findOne({ id })
 
     res.status(200).json({
       status: true,
@@ -60,41 +55,41 @@ const getSingleDocCategory= asyncHandler (async(req,res)=>{
       doc
     })
 
-  }catch(err){
+  } catch (err) {
     throw new Error(err)
   }
 })
 
 
-const deleteDocCategory= asyncHandler (async(req,res)=>{
-  const {id} = req.params
+const deleteDocCategory = asyncHandler(async (req, res) => {
+  const { id } = req.params
   validateMongodbId(id);
-  try{
+  try {
 
-    const docCategory= await DocCat.findByIdAndDelete(id)
+    const docCategory = await DocCat.findByIdAndDelete(id)
 
     res.status(200).json({
       status: true,
       message: 'Documentation Catgeory Deleted Successfully',
     })
 
-  }catch(err){
+  } catch (err) {
     throw new Error(err)
   }
 })
 
 
 
-const updateDocCategory= asyncHandler (async(req,res)=>{
-  const {id} = req.params
+const updateDocCategory = asyncHandler(async (req, res) => {
+  const { id } = req.params
   validateMongodbId(id);
-  try{
+  try {
 
-    if(req.body.title){
+    if (req.body.title) {
       req.body.slug = slugify(req.body.title.toLowerCase())
     }
 
-    const docCategory= await DocCat.findByIdAndUpdate(id,req.body,{new:true})
+    const docCategory = await DocCat.findByIdAndUpdate(id, req.body, { new: true })
 
     res.status(200).json({
       status: true,
@@ -102,7 +97,7 @@ const updateDocCategory= asyncHandler (async(req,res)=>{
       doc
     })
 
-  }catch(err){
+  } catch (err) {
     throw new Error(err)
   }
 })

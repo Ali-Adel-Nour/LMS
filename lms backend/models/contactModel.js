@@ -2,14 +2,14 @@ const mongoose = require('mongoose');
 
 let contactSchema = new mongoose.Schema(
     {
-        name:{
-             type: String,
-            required:true,
+        name: {
+            type: String,
+            required: true,
             index: true,
         },
         email: {
             type: String,
-            required:true,
+            required: true,
             index: true,
         },
         mobile: {
@@ -31,9 +31,9 @@ let contactSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
-        status:{
-          type: String,
-          default:"Submitted",
+        status: {
+            type: String,
+            default: "Submitted",
         }
     },
     {

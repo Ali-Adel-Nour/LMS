@@ -27,14 +27,15 @@ userRouter.post('/forgot-password', rateLimter, forgotPasswordToken);
 
 
 //Get all routes
-userRouter.get('/all-users', authMiddleware, isAdmin,rateLimter, getAllUsers);
+userRouter.get('/all-users', authMiddleware, isAdmin, rateLimter, getAllUsers);
 
-userRouter.get('/:_id', authMiddleware,rateLimter, getAUser);
+userRouter.get('/:_id', authMiddleware, rateLimter, getAUser);
 
 //all (put) routes
 
 
 userRouter.put('/update-profile', authMiddleware, rateLimter, updateUser);
+
 userRouter.put('/block/:id', authMiddleware, isAdmin, rateLimter, blockUser);
 
 userRouter.put('/unblock/:id', authMiddleware, isAdmin, rateLimter, unblockUser);

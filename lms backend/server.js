@@ -11,5 +11,5 @@ const server = http.createServer(app)
 
 
 server.listen(PORT,()=>{
-  console.log(`Server is Running on port ${PORT}`);
+console.log(`Server is Running on port ${PORT}`);
 });

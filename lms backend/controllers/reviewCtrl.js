@@ -1,5 +1,5 @@
 const Review = require('../models/reviewModel');
-const User = require ('../models/userModel');
+const User = require('../models/userModel');
 const asyncHandler = require('express-async-handler');
 const validateMongodbId = require('../config/valditeMongodb');
 
@@ -7,19 +7,19 @@ const validateMongodbId = require('../config/valditeMongodb');
 
 
 const createReview = asyncHandler(async (req, res) => {
-const {_id} = req.user;
-validateMongodbId(_id);
+  const { _id } = req.user;
+  validateMongodbId(_id);
 
 
 
-let data = {user:_id,email:req.body.email,comment:req.body.comment,color:req.body.color,rating:req.body.rating};
-const review =  await Review.create(data)
+  let data = { user: _id, email: req.body.email, comment: req.body.comment, color: req.body.color, rating: req.body.rating };
+  const review = await Review.create(data)
 
 
-res.status(200).json({
-  status: true,
-  message: 'Review Created Successfully',
-})
+  res.status(200).json({
+    status: true,
+    message: 'Review Created Successfully',
+  })
 
 })
 
@@ -28,72 +28,72 @@ res.status(200).json({
 
 
 const getSingleReview = asyncHandler(async (req, res) => {
-  const {id} = req.params;
+  const { id } = req.params;
   validateMongodbId(id);
 
-  const review =  await Review.findById(id)
+  const review = await Review.findById(id)
 
 
   res.status(200).json({
     status: true,
     message: 'Review Fetched Successfully',
-   review,
+    review,
   })
 
-  })
+})
 
 
 
 const updateReview = asyncHandler(async (req, res) => {
-  const {id} = req.params;
+  const { id } = req.params;
   validateMongodbId(id);
 
-  const review =  await Review.findByIdAndUpdate(id,req.body,{new:true})
+  const review = await Review.findByIdAndUpdate(id, req.body, { new: true })
 
 
   res.status(200).json({
     status: true,
     message: 'Review Updated Successfully',
-   review,
+    review,
   })
 
+})
+
+
+
+const deleteReview = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  validateMongodbId(id);
+
+  const review = await Review.findByIdAndDelete(id)
+
+
+  res.status(200).json({
+    status: true,
+    message: 'Review Deleted Successfully',
+    review,
   })
 
-
-
-  const deleteReview = asyncHandler(async (req, res) => {
-    const {id} = req.params;
-    validateMongodbId(id);
-
-    const review =  await Review.findByIdAndDelete(id)
-
-
-    res.status(200).json({
-      status: true,
-      message: 'Review Deleted Successfully',
-     review,
-    })
-
-    })
+})
 
 
 
 
-  const getAllReviews = asyncHandler(async (req, res) => {
+const getAllReviews = asyncHandler(async (req, res) => {
 
-    const review =  await Review.find()
+  const review = await Review.find()
 
 
-    res.status(200).json({
-      status: true,
-      message: 'All Reviews Fetched Successfully',
-      review
-    })
+  res.status(200).json({
+    status: true,
+    message: 'All Reviews Fetched Successfully',
+    review
+  })
 
-    })
+})
 
 
 
 
 
-module.exports = {createReview,getSingleReview,getAllReviews,updateReview,deleteReview};
+module.exports = { createReview, getSingleReview, getAllReviews, updateReview, deleteReview };

@@ -4,41 +4,38 @@ const validateMongodbId = require('../config/valditeMongodb');
 
 
 
+const postBlogCategory = asyncHandler(async (req, res) => {
 
-const postBlogCategory = asyncHandler (async(req,res)=>{
+  try {
 
-  try{
-
-  const blogCategory = await BlogCat.create(req.body)
+    const blogCategory = await BlogCat.create(req.body)
 
 
-  res.status(200).json({
-    status: true,
-    message: 'Blog Category Created Successfully',
-  })
-}catch (err) {
-  throw new Error(err)
-}
+    res.status(200).json({
+      status: true,
+      message: 'Blog Category Created Successfully',
+    })
+  } catch (err) {
+    throw new Error(err)
+  }
 });
 
 
 
 
-//Get all docs
 
 
-const getAllBlogsCategories = asyncHandler (async(req,res)=>{
-  try{
+const getAllBlogsCategories = asyncHandler(async (req, res) => {
+  try {
 
-    const blogCategory= await BlogCat.find()
+    const blogCategory = await BlogCat.find()
 
-    if(!blogCategory)
-{
-  res.status(404).json({
-    status:false,
-    message: 'Blog Category Not Found'
-  })
-}
+    if (!blogCategory) {
+      res.status(404).json({
+        status: false,
+        message: 'Blog Category Not Found'
+      })
+    }
     res.status(200).json({
 
       status: true,
@@ -46,24 +43,22 @@ const getAllBlogsCategories = asyncHandler (async(req,res)=>{
       doc
     })
 
-  }catch(err){
+  } catch (err) {
     throw new Error(err)
   }
 })
 
 
 
-//Get single doc
+const getSingleBlogCategory = asyncHandler(async (req, res) => {
+  const { id } = req.params
+  try {
 
-const getSingleBlogCategory = asyncHandler (async(req,res)=>{
-  const {id} = req.params
-  try{
+    const blogCategory = await BlogCat.findOne({ id })
 
-    const blogCategory= await BlogCat.findOne({id})
-
-    if(!blogCategory){
+    if (!blogCategory) {
       res.status(404).json({
-        status:false,
+        status: false,
         message: 'No Blog Category with This Id'
       })
     }
@@ -74,22 +69,22 @@ const getSingleBlogCategory = asyncHandler (async(req,res)=>{
       doc
     })
 
-  }catch(err){
+  } catch (err) {
     throw new Error(err)
   }
 })
 
 
-const deleteBlogCategory = asyncHandler (async(req,res)=>{
-  const {id} = req.params
+const deleteBlogCategory = asyncHandler(async (req, res) => {
+  const { id } = req.params
   validateMongodbId(id);
-  try{
+  try {
 
-    const blogCategory= await BlogCat.findByIdAndDelete(id)
+    const blogCategory = await BlogCat.findByIdAndDelete(id)
 
-    if(!blogCategory){
+    if (!blogCategory) {
       res.status(404).json({
-        status:false,
+        status: false,
         message: 'No Blog Category with This Id'
       })
     }
@@ -99,23 +94,23 @@ const deleteBlogCategory = asyncHandler (async(req,res)=>{
       message: 'Blog Catgeory Deleted Successfully',
     })
 
-  }catch(err){
+  } catch (err) {
     throw new Error(err)
   }
 })
 
 
 
-const updateBlogCategory = asyncHandler (async(req,res)=>{
-  const {id} = req.params
+const updateBlogCategory = asyncHandler(async (req, res) => {
+  const { id } = req.params
   validateMongodbId(id);
-  try{
+  try {
 
-    if(req.body.title){
+    if (req.body.title) {
       req.body.slug = slugify(req.body.title.toLowerCase())
     }
 
-    const blogCategory= await BlogCat.findByIdAndUpdate(id,req.body,{new:true})
+    const blogCategory = await BlogCat.findByIdAndUpdate(id, req.body, { new: true })
 
     res.status(200).json({
       status: true,
@@ -123,7 +118,7 @@ const updateBlogCategory = asyncHandler (async(req,res)=>{
       doc
     })
 
-  }catch(err){
+  } catch (err) {
     throw new Error(err)
   }
 })

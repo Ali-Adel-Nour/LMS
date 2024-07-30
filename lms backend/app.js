@@ -26,19 +26,19 @@ const passport = require('passport');
 const passportSetup = require('./utils/passport');
 
 app.get('/', (req, res) => {
-    res.send(`<a href="http://localhost:4000/google">Login with google</a>`);
+  res.send(`<a href="http://localhost:4000/google">Login with google</a>`);
 });
 
 app.use(
-    session({
-        resave: false,
-        saveUninitialized: false,
-        secret: 'mysecret',
-        store: MongoStore.create({
-            mongoUrl: process.env.MONGODB_URI,
-            ttl: 12 * 60 * 60,
-        }),
-    })
+  session({
+    resave: false,
+    saveUninitialized: false,
+    secret: 'mysecret',
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI,
+      ttl: 12 * 60 * 60,
+    }),
+  })
 );
 
 app.use(passport.initialize());

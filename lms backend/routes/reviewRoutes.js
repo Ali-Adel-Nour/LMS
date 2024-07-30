@@ -1,4 +1,4 @@
-const { createReview,getSingleReview,getAllReviews,updateReview,deleteReview} = require('../controllers/reviewCtrl');
+const { createReview, getSingleReview, getAllReviews, updateReview, deleteReview } = require('../controllers/reviewCtrl');
 const { isAdmin, authMiddleware } = require('../middleware/authMiddleware');
 const rateLimter = require("../middleware/rateLimiter")
 const reviewRouter = require('express').Router();

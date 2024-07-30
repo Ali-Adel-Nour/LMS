@@ -6,10 +6,10 @@ let blogCatSchema = new mongoose.Schema(
             type: String,
             required: true,
         }
-        },
+    },
     {
         timestamp: true,
     }
 );
 
-module.exports = mongoose.model("BlogCat",blogCatSchema)
+module.exports = mongoose.model("BlogCat", blogCatSchema)

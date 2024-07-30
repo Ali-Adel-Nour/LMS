@@ -3,12 +3,12 @@ const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const User = require("../models/userModel");
 
 passport.use(new GoogleStrategy({
-    clientID: "597031288770-3bdm3op7gece61h50l2p4t6olqkuf2q9.apps.googleusercontent.com",
-    clientSecret: "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",
-    callbackURL: "http://localhost:4000/auth/google/callback",
-    scope: ["profile", "email"]
-  },
-  async function(accessToken, refreshToken, profile, cb) {
+  clientID: "597031288770-3bdm3op7gece61h50l2p4t6olqkuf2q9.apps.googleusercontent.com",
+  clientSecret: "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",
+  callbackURL: "http://localhost:4000/auth/google/callback",
+  scope: ["profile", "email"]
+},
+  async function (accessToken, refreshToken, profile, cb) {
     try {
       let data = profile._json;
       let user = await User.findOne({ email: data.email });

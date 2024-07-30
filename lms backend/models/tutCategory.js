@@ -1,26 +1,26 @@
 const mongoose = require('mongoose');
 
 let tutCategorySchema = new mongoose.Schema({
-  title :{
+  title: {
     type: String,
     required: true,
     unique: true,
   },
   slug: {
-    type : String,
+    type: String,
     required: true,
     unique: true,
     index: true,
   },
-  image : {
+  image: {
     type: String,
     default:
       "https://climate.onep.go.th/mp-content/uploads/2020/01/default-image.jpg",
   },
 },
-{
-  timestamps: true,
-}
+  {
+    timestamps: true,
+  }
 );
 
-module.exports = mongoose.model("TutotrialCategory",tutCategorySchema);
+module.exports = mongoose.model("TutotrialCategory", tutCategorySchema);

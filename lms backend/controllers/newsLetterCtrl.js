@@ -4,31 +4,31 @@ const asyncHandler = require('express-async-handler');
 const validateMongodbId = require('../config/valditeMongodb');
 
 
-const subscribe= asyncHandler(async(req,res)=>{
+const subscribe = asyncHandler(async (req, res) => {
 
- try{
+  try {
 
-  const newEmail = await NewsLetter.create(req.body)
-  res.status(200).json({status:true, message:'Subscribed To NewsLetter'})
+    const newEmail = await NewsLetter.create(req.body)
+    res.status(200).json({ status: true, message: 'Subscribed To NewsLetter' })
 
- }catch(err){
-  throw new Error(err);
- }
+  } catch (err) {
+    throw new Error(err);
+  }
 
 })
 
- const unsubscribe= asyncHandler(async(req,res)=>{
+const unsubscribe = asyncHandler(async (req, res) => {
 
-  try{
+  try {
 
-    const {id} = req.params;
+    const { id } = req.params;
     validateMongodbId(id);
 
-   const removeEmail = await NewsLetter.findByIdAndDelete(id)
-   res.status(200).json({status:true, message:'Unsubscribed To NewsLetter'})
+    const removeEmail = await NewsLetter.findByIdAndDelete(id)
+    res.status(200).json({ status: true, message: 'Unsubscribed To NewsLetter' })
 
-  }catch(err){
-   throw new Error(err);
+  } catch (err) {
+    throw new Error(err);
   }
 
 
@@ -36,4 +36,4 @@ const subscribe= asyncHandler(async(req,res)=>{
 })
 
 
-module.exports = {subscribe,unsubscribe};
+module.exports = { subscribe, unsubscribe };

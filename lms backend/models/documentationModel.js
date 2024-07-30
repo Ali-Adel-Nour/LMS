@@ -9,8 +9,8 @@ let docSchema = new mongoose.Schema(
         slug: { type: String, required: true },
 
         type: {
-          type: String,
-          required: true,
+            type: String,
+            required: true,
         },
 
         author: {
@@ -24,21 +24,22 @@ let docSchema = new mongoose.Schema(
             required: true,
         },
 
-        keywords: { type: String,
-           required: true
+        keywords: {
+            type: String,
+            required: true
         },
 
 
-    doc_image: {
+        doc_image: {
 
-      type : String,
-      default:
-        "https://climate.onep.go.th/mp-content/uploads/2020/01/default-image.jpg",
+            type: String,
+            default:
+                "https://climate.onep.go.th/mp-content/uploads/2020/01/default-image.jpg",
+        },
     },
-  },
     {
         timestamp: true,
     }
 );
 
-module.exports = mongoose.model("Documentation",docSchema)
+module.exports = mongoose.model("Documentation", docSchema)

@@ -5,10 +5,10 @@ let tutorialSchema = new mongoose.Schema({
   title: {
     required: true,
     unique: true,
-    type: String ,
+    type: String,
   },
   slug: {
-    type : String,
+    type: String,
     required: true,
     unique: true,
     index: true,
@@ -20,31 +20,31 @@ let tutorialSchema = new mongoose.Schema({
 
   },
 
-  tutorialCategorySlug:{
+  tutorialCategorySlug: {
 
     type: String,
     required: true,
 
 
   },
-  topicName:{
+  topicName: {
     required: true,
     unique: true,
-    type: String ,
+    type: String,
   },
 
-  content : {
+  content: {
     required: true,
-    type: String ,
+    type: String,
   },
 
-  keywords:{
-    type:[],
+  keywords: {
+    type: [],
     required: true,
   }
 
 },
-  {timestamps:true}
+  { timestamps: true }
 );
 
 

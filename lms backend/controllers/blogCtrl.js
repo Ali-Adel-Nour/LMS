@@ -2,40 +2,38 @@ const Blog = require('../models/blogModel');
 const asyncHandler = require('express-async-handler');
 const validateMongodbId = require('../config/valditeMongodb');
 
-const {default:slugify} = require("slugify")
+const { default: slugify } = require("slugify")
 
 
-const postBlog = asyncHandler (async(req,res)=>{
+const postBlog = asyncHandler(async (req, res) => {
 
-  try{
+  try {
 
-    if(req.body.title){
+    if (req.body.title) {
       req.body.slug = slugify(req.body.title.toLowerCase())
     }
-  const blog = await Blog.create(req.body)
+    const blog = await Blog.create(req.body)
 
 
-  res.status(200).json({
-    status: true,
-    message: 'Blog Created Successfully',
-  })
-}catch (err) {
-  throw new Error(err)
-}
+    res.status(200).json({
+      status: true,
+      message: 'Blog Created Successfully',
+    })
+  } catch (err) {
+    throw new Error(err)
+  }
 });
 
 
 
 
-//Get all docs
 
+const getAllBlogs = asyncHandler(async (req, res) => {
+  try {
 
-const getAllBlogs = asyncHandler (async(req,res)=>{
-  try{
+    const blogs = await Blog.find()
 
-    const blogs= await Blog.find()
-
-    if(!blogs){
+    if (!blogs) {
 
       res.status(400).json({
         status: false,
@@ -51,22 +49,22 @@ const getAllBlogs = asyncHandler (async(req,res)=>{
       blogs
     })
 
-  }catch(err){
+  } catch (err) {
     throw new Error(err)
   }
 })
 
 
 
-//Get single doc
 
-const getSingleBlog = asyncHandler (async(req,res)=>{
-  const {slug} = req.params
-  try{
 
-    const blog= await Blog.findOne({slug:slug})
+const getSingleBlog = asyncHandler(async (req, res) => {
+  const { slug } = req.params
+  try {
 
-    if(!blog){
+    const blog = await Blog.findOne({ slug: slug })
+
+    if (!blog) {
 
       res.status(400).json({
         status: false,
@@ -82,20 +80,20 @@ const getSingleBlog = asyncHandler (async(req,res)=>{
 
     })
 
-  }catch(err){
+  } catch (err) {
     throw new Error(err)
   }
 })
 
 
-const deleteBlog = asyncHandler (async(req,res)=>{
-  const {id} = req.params
+const deleteBlog = asyncHandler(async (req, res) => {
+  const { id } = req.params
   validateMongodbId(id);
-  try{
+  try {
 
-    const blog= await Blog.findByIdAndDelete(id)
+    const blog = await Blog.findByIdAndDelete(id)
 
-    if(!blog){
+    if (!blog) {
 
       res.status(404).json({
         status: false,
@@ -109,26 +107,26 @@ const deleteBlog = asyncHandler (async(req,res)=>{
       message: 'Blog Deleted Successfully',
     })
 
-  }catch(err){
+  } catch (err) {
     throw new Error(err)
   }
 })
 
 
 
-const updateBlog = asyncHandler (async(req,res)=>{
-  const {id} = req.params
+const updateBlog = asyncHandler(async (req, res) => {
+  const { id } = req.params
   validateMongodbId(id);
-  try{
+  try {
 
-    if(req.body.title){
+    if (req.body.title) {
       req.body.slug = slugify(req.body.title.toLowerCase())
     }
 
-    const blog= await Blog.findByIdAndUpdate(id,req.body,{new:true})
+    const blog = await Blog.findByIdAndUpdate(id, req.body, { new: true })
 
 
-       if(!blog){
+    if (!blog) {
 
       res.status(400).json({
         status: false,
@@ -143,7 +141,7 @@ const updateBlog = asyncHandler (async(req,res)=>{
 
     })
 
-  }catch(err){
+  } catch (err) {
     throw new Error(err)
   }
 })

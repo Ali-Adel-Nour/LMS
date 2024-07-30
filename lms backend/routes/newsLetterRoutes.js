@@ -1,5 +1,4 @@
-const {subscribe,unsubscribe} = require('../controllers/newsLetterCtrl')
-
+const { subscribe, unsubscribe } = require('../controllers/newsLetterCtrl')
 const newsLetterRouter = require('express').Router();
 const rateLimter = require("../middleware/rateLimiter")
 

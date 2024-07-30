@@ -1,6 +1,6 @@
-const {postTutorial,getATutorial,updateATutorial,deleteATutorial,getAllTutorials} = require('../controllers/tutorialCtrl');
+const { postTutorial, getATutorial, updateATutorial, deleteATutorial, getAllTutorials } = require('../controllers/tutorialCtrl');
 
-const {authMiddleware,isAdmin} = require('../middleware/authMiddleware');
+const { authMiddleware, isAdmin } = require('../middleware/authMiddleware');
 
 const rateLimter = require("../middleware/rateLimiter")
 
