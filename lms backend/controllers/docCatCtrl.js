@@ -26,13 +26,27 @@ const postDocCategory = asyncHandler(async (req, res) => {
 const getAllDocsCatgories = asyncHandler(async (req, res) => {
   try {
 
-    const docCategory = await DocCat.find()
+
+    let = { page, size } = req.query;
+
+    if (!page) {
+      page = 1;
+    }
+    if (!size) {
+      size = 10;
+    }
+
+    const limit = parseInt(size);
+    const skip = (page - 1) * size;
+
+    const docCategory = await DocCat.find().limit(limit).skip(skip)
 
     res.status(200).json({
 
       status: true,
+      page,size,
       message: 'All Documentations Categories Fetched Successfully',
-      doc
+      docCategory
     })
 
   } catch (err) {
@@ -52,7 +66,7 @@ const getSingleDocCategory = asyncHandler(async (req, res) => {
     res.status(200).json({
       status: true,
       message: 'Documenantation Category Fetched Successfully',
-      doc
+      docCategory
     })
 
   } catch (err) {
@@ -94,7 +108,7 @@ const updateDocCategory = asyncHandler(async (req, res) => {
     res.status(200).json({
       status: true,
       message: 'Documentation Category Updated Successfully',
-      doc
+      docCategory
     })
 
   } catch (err) {

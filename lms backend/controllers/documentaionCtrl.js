@@ -31,11 +31,25 @@ const postADoc = asyncHandler(async (req, res) => {
 const getAllDocs = asyncHandler(async (req, res) => {
   try {
 
-    const doc = await Document.find()
+
+    let = { page, size } = req.query;
+
+    if (!page) {
+      page = 1;
+    }
+    if (!size) {
+      size = 10;
+    }
+
+    const limit = parseInt(size);
+    const skip = (page - 1) * size;
+
+    const doc = await Document.find().limit(limit).skip(skip)
 
     res.status(200).json({
 
       status: true,
+      page,size,
       message: 'All Documents Fetched Successfully',
       doc
     })

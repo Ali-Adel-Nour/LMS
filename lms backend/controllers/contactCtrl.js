@@ -19,7 +19,21 @@ const createContact = asyncHandler(async (req, res) => {
 
 
 const getAllContacts = asyncHandler(async (req, res) => {
-  const contacts = await Contact.find()
+
+  let = { page, size } = req.query;
+
+  if (!page) {
+    page = 1;
+  }
+  if (!size) {
+    size = 10;
+  }
+
+  const limit = parseInt(size);
+  const skip = (page - 1) * size;
+
+
+  const contacts = await Contact.find().limit(limit).skip(skip)
 
   if (!contacts) {
     res.status(404).json({
@@ -30,6 +44,7 @@ const getAllContacts = asyncHandler(async (req, res) => {
 
   res.status(200).json({
     status: true,
+    page,size,
     message: 'Contacts Fetched Successfully',
     contacts,
   })

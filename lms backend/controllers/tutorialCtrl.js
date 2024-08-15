@@ -121,10 +121,24 @@ const deleteATutorial = asyncHandler(async (req, res) => {
 
 const getAllTutorials = asyncHandler(async (req, res) => {
   try {
-    const allTutorials = await Tutorial.find();
+
+    let = { page, size } = req.query;
+
+    if (!page) {
+      page = 1;
+    }
+    if (!size) {
+      size = 10;
+    }
+
+    const limit = parseInt(size);
+    const skip = (page - 1) * size;
+
+    const allTutorials = await Tutorial.find().limit(limit).skip(skip);
 
     res.status(200).json({
       status: true,
+      page,size,
       message: 'All Tutorials Fetched Successfully',
       allTutorials,
     });

@@ -20,4 +20,4 @@ docCatRouter.put("/:id/edit", authMiddleware, isAdmin, rateLimter, updateDocCate
 
 docCatRouter.delete("/:id", authMiddleware, isAdmin, rateLimter, deleteDocCategory);
 
-module.exports =  docCatRouter
+module.exports = docCatRouter

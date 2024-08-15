@@ -31,7 +31,20 @@ const postBlog = asyncHandler(async (req, res) => {
 const getAllBlogs = asyncHandler(async (req, res) => {
   try {
 
-    const blogs = await Blog.find()
+    let = { page, size } = req.query;
+
+    if (!page) {
+      page = 1;
+    }
+    if (!size) {
+      size = 10;
+    }
+
+    const limit = parseInt(size);
+    const skip = (page - 1) * size;
+
+
+    const blogs = await Blog.find().limit(limit).skip(skip)
 
     if (!blogs) {
 
@@ -45,6 +58,7 @@ const getAllBlogs = asyncHandler(async (req, res) => {
     res.status(200).json({
 
       status: true,
+      page,size,
       message: 'All Blogs Fetched Successfully',
       blogs
     })

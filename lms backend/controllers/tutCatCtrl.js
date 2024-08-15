@@ -24,9 +24,25 @@ const postTutorialCategory = asyncHandler(async (req, res) => {
 const getAllCategory = asyncHandler(async (req, res) => {
 
   try {
-    const alltutcat = await TutotrialCategory.find()
+
+    let = { page, size } = req.query;
+
+    if (!page) {
+      page = 1;
+    }
+    if (!size) {
+      size = 10;
+    }
+
+    const limit = parseInt(size);
+    const skip = (page - 1) * size;
+
+    const alltutcat = await TutotrialCategory.find().limit(limit).skip(skip);
     res.status(200).json({
-      status: true, message: 'Tutorial Category Fetched Successfully', alltutcat
+      status: true,
+      page, size,
+      message: 'Tutorial Category Fetched Successfully',
+      alltutcat
     })
 
 
