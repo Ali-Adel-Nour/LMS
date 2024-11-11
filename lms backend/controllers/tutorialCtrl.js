@@ -3,20 +3,23 @@ const Tutorial = require('../models/tutorialModel');
 const asyncHandler = require('express-async-handler');
 
 const { default: slugify } = require('slugify');
+const TutorialCategory = require('../models/tutCategory');
 
 const validateMongodbId = require('../config/valditeMongodb');
 const postTutorial = asyncHandler(async (req, res) => {
   try {
-    if (req.body.title) {
-      req.body.slug = slugify(req.body.title.toLowerCase());
-    }
+    // Check if the tutorial category exists in the database
+    const categoryExists = await TutorialCategory.findOne({
+      slug: slugify(req.body.tutorialCategory.toLowerCase()),
+  });
 
-    if (req.body.tutorialCategory) {
-      req.body.tutorialCategorySlug = slugify(
-        req.body.tutorialCategory.toLowerCase()
-      );
-    }
-
+  if (!categoryExists) {
+      return res.status(400).json({
+          status: false,
+          message: 'Tutorial category does not exist.',
+      });
+  }
+    // Create the tutorial
     const postTut = await Tutorial.create(req.body);
 
     res.status(200).json({
@@ -25,10 +28,12 @@ const postTutorial = asyncHandler(async (req, res) => {
       postTut,
     });
   } catch (error) {
-    throw new Error(error);
+    res.status(500).json({
+      status: false,
+      message: error.message,
+    });
   }
 });
-
 const getATutorial = asyncHandler(async (req, res) => {
   const { slug, type } = req.params;
 

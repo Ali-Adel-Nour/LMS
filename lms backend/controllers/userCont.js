@@ -92,7 +92,7 @@ const getAUser = asyncHandler(async (req, res) => {
       message: 'User Found',
       getProfile,
     });
-    console.log(id)
+
   } catch (err) {
     throw new Error(err);
   }

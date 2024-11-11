@@ -11,7 +11,7 @@ const newsLetterRouter = require('./routes/newsLetterRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
 const contactRouter = require('./routes/contactRoutes');
 
-const videoRouter = require('./routes/videoRoutes');
+//const videoRouter = require('./routes/videoRoutes');
 
 const docRouter = require('./routes/docRoutes');
 
@@ -55,7 +55,7 @@ app.use('/api/v1/tutorial', tutorialRouter);
 app.use('/api/v1/newsletter', newsLetterRouter);
 app.use('/api/v1/review', reviewRouter);
 app.use('/api/v1/contact', contactRouter);
-app.use('/api/v1/video', videoRouter);
+//app.use('/api/v1/video', videoRouter);
 app.use('/api/v1/documentation', docRouter);
 app.use('/api/v1/documentation/category', docCatRouter);
 app.use('/api/v1/blog', blogRouter);
