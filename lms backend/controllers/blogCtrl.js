@@ -4,34 +4,46 @@ const validateMongodbId = require('../config/valditeMongodb');
 
 const { default: slugify } = require("slugify")
 
-
+const blogCat = require("../models/blogCatModel")
 const postBlog = asyncHandler(async (req, res) => {
-
   try {
+    const blogCatExist = await blogCat.findOne({ title: slugify(req.body.category.toLowerCase()) });
 
-    if (req.body.title) {
-      req.body.slug = slugify(req.body.title.toLowerCase())
+    // If category doesn't exist, return early
+    if (!blogCatExist) {
+      return res.status(400).json({
+        status: false,
+        message: "No Blog Category with this name",
+      });
     }
-    const blog = await Blog.create(req.body)
 
+    // Create a slug for the title if it's provided
+    if (req.body.title) {
+      req.body.slug = slugify(req.body.title.toLowerCase());
+    }
 
+    // Create the blog
+    const blog = await Blog.create(req.body);
+
+    // Send success response
     res.status(200).json({
       status: true,
       message: 'Blog Created Successfully',
-    })
+    });
   } catch (err) {
-    throw new Error(err)
+    res.status(500).json({
+      status: false,
+      message: err.message || 'Internal Server Error',
+    });
   }
 });
-
-
 
 
 
 const getAllBlogs = asyncHandler(async (req, res) => {
   try {
 
-    let = { page, size } = req.query;
+    let  { page, size } = req.query;
 
     if (!page) {
       page = 1;

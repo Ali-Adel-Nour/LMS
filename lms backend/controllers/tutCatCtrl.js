@@ -25,7 +25,7 @@ const getAllCategory = asyncHandler(async (req, res) => {
 
   try {
 
-    let = { page, size } = req.query;
+    let { page, size } = req.query;
 
     if (!page) {
       page = 1;

@@ -28,7 +28,7 @@ const postBlogCategory = asyncHandler(async (req, res) => {
 const getAllBlogsCategories = asyncHandler(async (req, res) => {
   try {
 
-    let = { page, size } = req.query;
+    let { page, size } = req.query;
 
     if (!page) {
       page = 1;
@@ -53,7 +53,7 @@ const getAllBlogsCategories = asyncHandler(async (req, res) => {
       status: true,
       page,size,
       message: 'All Blogs Categories Fetched Successfully',
-      doc
+
     })
 
   } catch (err) {
@@ -64,28 +64,32 @@ const getAllBlogsCategories = asyncHandler(async (req, res) => {
 
 
 const getSingleBlogCategory = asyncHandler(async (req, res) => {
-  const { id } = req.params
-  try {
+  const { id } = req.params;
 
-    const blogCategory = await BlogCat.findOne({ id })
+  try {
+    const blogCategory = await BlogCat.findOne({ _id: id }); // Use _id instead of id for mongoose query
 
     if (!blogCategory) {
-      res.status(404).json({
+      return res.status(404).json({
         status: false,
-        message: 'No Blog Category with This Id'
-      })
+        message: 'No Blog Category with This Id',
+      });
     }
 
-    res.status(200).json({
+
+    return res.status(200).json({
       status: true,
       message: 'Blog Category Fetched Successfully',
-      doc
-    })
+      blogCategory,
+    });
 
   } catch (err) {
-    throw new Error(err)
+    res.status(500).json({
+      status: false,
+      message: err.message || 'Internal Server Error',
+    });
   }
-})
+});
 
 
 const deleteBlogCategory = asyncHandler(async (req, res) => {
@@ -128,7 +132,7 @@ const updateBlogCategory = asyncHandler(async (req, res) => {
     res.status(200).json({
       status: true,
       message: 'Blog Category Updated Successfully',
-      doc
+
     })
 
   } catch (err) {

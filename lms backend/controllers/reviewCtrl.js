@@ -83,7 +83,7 @@ const getAllReviews = asyncHandler(async (req, res) => {
 
 
 
-  let = { page, size } = req.query;
+  let  { page, size } = req.query;
 
   if (!page) {
     page = 1;
