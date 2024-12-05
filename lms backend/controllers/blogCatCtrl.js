@@ -1,22 +1,43 @@
 const BlogCat = require('../models/blogCatModel');
 const asyncHandler = require('express-async-handler');
 const validateMongodbId = require('../config/valditeMongodb');
+const slugify = require('slugify');
 
 
 
 const postBlogCategory = asyncHandler(async (req, res) => {
 
   try {
+    if (req.body.title) {
+      req.body.slug = slugify(req.body.title.toLowerCase());
+    }
+    const existingCategory = await BlogCat.findOne({ slug: req.body.slug });
+    if (existingCategory) {
+      return res.status(400).json({
+        status: false,
+        message: 'Blog Category already exists. Please use a different title.',
+      });
+    }
 
-    const blogCategory = await BlogCat.create(req.body)
-
+    const blogCategory = await BlogCat.create(req.body);
 
     res.status(200).json({
       status: true,
       message: 'Blog Category Created Successfully',
+      blogCategory
     })
   } catch (err) {
-    throw new Error(err)
+    if (err.code === 11000) {
+      res.status(400).json({
+        status: false,
+        message: 'Category already exists. Please use a different title.',
+      });
+    } else {
+      res.status(500).json({
+        status: false,
+        message: 'An unexpected error occurred.',
+      });
+    }
   }
 });
 

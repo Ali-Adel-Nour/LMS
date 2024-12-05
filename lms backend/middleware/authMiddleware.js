@@ -54,7 +54,7 @@ const isInstructor = asyncHandler(async (req, res, next) => {
 const isBoth = asyncHandler(async(req,res,next)=>{
   const {email} = req.user
   const isBoth = await User.findOne({email:email})
-  if(isBoth.roles !== "admin" || isBoth.roles !== "instructor"){
+  if((isBoth.roles !== "admin" || isBoth.roles !== "instructor") == false){
     throw new Error("You shoud be admin or instructor")
   }
   else{

@@ -1,27 +1,37 @@
 const DocCat = require('../models/docCatModel');
 const asyncHandler = require('express-async-handler');
 const validateMongodbId = require('../config/valditeMongodb');
-
+const  slugify  = require("slugify")
 
 const postDocCategory = asyncHandler(async (req, res) => {
-
   try {
+    if (req.body.title) {
+      req.body.slug = slugify(req.body.title.toLowerCase());
+    }
 
-    const docCategory = await DocCat.create(req.body)
+    const existingCategory = await DocCat.findOne({ slug: req.body.slug });
+    if (existingCategory) {
+      return res.status(400).json({
+        status: false,
+        message: 'Documentation Category already exists. Please use a different title.',
+      });
+    }
 
+    const docCategory = await DocCat.create(req.body);
 
     res.status(200).json({
       status: true,
       message: 'Documentation Category Created Successfully',
-    })
+      docCategory,
+    });
   } catch (err) {
-    throw new Error(err)
+    res.status(500).json({
+      status: false,
+      message: 'An unexpected error occurred.',
+      error: err.message, // This will help in debugging
+    });
   }
 });
-
-
-
-
 
 const getAllDocsCatgories = asyncHandler(async (req, res) => {
   try {
