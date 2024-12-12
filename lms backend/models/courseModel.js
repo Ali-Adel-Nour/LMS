@@ -32,7 +32,64 @@ let courseSchema = new mongoose.Schema(
     description: {
       type: String,
       required: true,
+      minLength: [10, "Description must be at least 10 characters long"],
+      maxLength: [1000, "Description must be at most 1000 characters long"],
     },
+    price: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+
+    published: {
+      type: Boolean,
+      default: false,
+    },
+    instructor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true
+    },
+    lesson: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Lesson",
+      required: true
+    },
+    paid:{
+      type: Boolean,
+      default: false,
+    },
+    totalHours: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    enrolled: {
+      type: String,
+      required: true,
+      default: 0,
+    },
+
+    rating:[{
+      stars: {
+        type: Number,
+        required: true,
+        default: 0,
+      },
+      comment: {
+        type: String,
+        postedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true
+        }
+      },
+      totalRating: {
+        type: Number,
+        required: true,
+        default: 0,
+      }
+    }],
 
     keywords: {
       type: [],
