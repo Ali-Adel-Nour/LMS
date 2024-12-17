@@ -145,26 +145,21 @@ const getAllCourses = asyncHandler(async (req, res) => {
 
 const getSingleCourse = asyncHandler(async (req, res) => {
   const { slug } = req.params;
-  try {
-    const course = await Course.findOne({ slug: slug });
-    console.log('Found course:', course); // Debug log
 
+  const course = await Course.findOne({ slug });
 
-    if (!course) {
-      res.status(404).json({
-        status: false,
-        message: 'Course not found',
-      });
-    }
-
-    res.status(200).json({
-      status: true,
-      message: 'Course Fetched Successfully',
-      course
+  if (!course) {
+    return res.status(404).json({
+      status: false,
+      message: 'Course not found',
     });
-  } catch (err) {
-    throw new Error(err);
   }
+
+  return res.status(200).json({
+    status: true,
+    message: 'Course Fetched Successfully',
+    course
+  });
 });
 
 const deleteCourse = asyncHandler(async (req, res) => {
