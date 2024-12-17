@@ -21,6 +21,7 @@ const blogRouter = require('./routes/blogRoutes');
 
 const blogCatRouter = require('./routes/blogCatRoutes');
 const courseRouter = require('./routes/courseRoutes');
+const lessonRouter = require('./routes/lessonRoutes');
 const courseCatRouter = require('./routes/courseCatRoutes');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
@@ -62,6 +63,7 @@ app.use('/api/v1/documentation', docRouter);
 app.use('/api/v1/documentation/category', docCatRouter);
 app.use('/api/v1/blog', blogRouter);
 app.use('/api/v1/blog/category', blogCatRouter);
+app.use('/api/v1/lesson',lessonRouter)
 app.use('/api/v1/course', courseRouter);
 app.use('/api/v1/course/category', courseCatRouter);
 
