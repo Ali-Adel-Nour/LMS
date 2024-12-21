@@ -4,32 +4,20 @@ const {
   getSingleCourse,
   deleteCourse,
   updateCourse,
-  getAllCoursesByCategory
+  getAllCoursesByCategory,
+  getParticularInstructorCourses,
+
 } = require("../controllers/courseCtrl")
 const { isAdmin, authMiddleware,isBoth } = require('../middleware/authMiddleware');
 const rateLimter = require("../middleware/rateLimiter")
 const courseRouter = require('express').Router();
 
-courseRouter.post("/", authMiddleware, isAdmin, isBoth, rateLimter, postCourse);
-
-
-
-courseRouter.get("/:slug", authMiddleware, isAdmin,  rateLimter, getSingleCourse);
-
-
-
-courseRouter.get("/all", authMiddleware, isAdmin,  rateLimter, getAllCourses);
-
-
-
-courseRouter.get("/:type", authMiddleware, isAdmin,  rateLimter, getAllCoursesByCategory);
-
-
-courseRouter.put("/:id/edit", authMiddleware, isAdmin, rateLimter, updateCourse);
-
-
-
-
-courseRouter.delete("/:id", authMiddleware, isAdmin, rateLimter, deleteCourse);
+courseRouter.get("/:type", authMiddleware, isBoth, rateLimter, getAllCoursesByCategory);
+courseRouter.get("/:instructorId/all-courses", authMiddleware, rateLimter, getParticularInstructorCourses);
+courseRouter.get("/:slug", authMiddleware, rateLimter, getSingleCourse);
+courseRouter.get("/all", authMiddleware, rateLimter, getAllCourses);
+courseRouter.post("/", authMiddleware, isBoth, rateLimter, postCourse);
+courseRouter.put("/:id/edit", authMiddleware, isBoth, rateLimter, updateCourse);
+courseRouter.delete("/:id", authMiddleware, isBoth, rateLimter, deleteCourse);
 
 module.exports = courseRouter

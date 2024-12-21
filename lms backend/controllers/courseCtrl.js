@@ -162,6 +162,32 @@ const getSingleCourse = asyncHandler(async (req, res) => {
   });
 });
 
+
+const getParticularInstructorCourses = asyncHandler(async (req, res) => {
+  const { instructorId } = req.params;
+  validateMongodbId(instructorId);
+  try {
+    const courses = await Course.find({ instructor: instructorId });
+
+    if (!courses) {
+      res.status(404).json({
+        status: false,
+        message: 'No Course Found',
+      });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: 'All Courses Fetched Successfully',
+      courses
+    });
+  } catch (err) {
+    throw new Error(err);
+  }
+});
+
+
+
 const deleteCourse = asyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbId(id);
@@ -218,5 +244,6 @@ module.exports = {
   getSingleCourse,
   deleteCourse,
   updateCourse,
-  getAllCoursesByCategory
+  getAllCoursesByCategory,
+  getParticularInstructorCourses,
 };
