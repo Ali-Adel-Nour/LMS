@@ -11,7 +11,7 @@ const { authMiddleware, isAdmin, isBoth } = require('../middleware/authMiddlewar
 const rateLimter = require('../middleware/rateLimiter');
 
 
-lessonRouter.post("/", authMiddleware, isAdmin, isBoth, postALesson);
+lessonRouter.post("/", authMiddleware, isAdmin, isBoth, rateLimter, postALesson);
 
 lessonRouter.get("/all", authMiddleware, isAdmin,  rateLimter, getAllLessons);
 
