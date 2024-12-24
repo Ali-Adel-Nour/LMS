@@ -46,7 +46,7 @@ const getAllCoursesByCategory = asyncHandler(async (req, res) => {
 const postCourse = asyncHandler(async (req, res) => {
   try {
     const instructorId = req.body.instructor;
-    const lessonId = req.body.lesson;
+    //const lessonId = req.body.lesson;
 
 
 
@@ -84,15 +84,15 @@ const postCourse = asyncHandler(async (req, res) => {
 
 
 
-    validateMongodbId(lessonId)
+    // validateMongodbId(lessonId)
 
-    let lesson = await Lesson.findById(lessonId);
-    if(!lesson){
-      return res.status(404).json({
-        status: false,
-        message: "Lesson not found"
-      });
-    }
+    // let lesson = await Lesson.findById(lessonId);
+    // if(!lesson){
+    //   return res.status(404).json({
+    //     status: false,
+    //     message: "Lesson not found"
+    //   });
+    // }
 
 
     const course = await Course.create(req.body);

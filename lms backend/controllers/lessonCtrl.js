@@ -1,4 +1,4 @@
-const Document = require('../models/lessonModel');
+const Course = require('../models/courseModel');
 const asyncHandler = require('express-async-handler');
 const validateMongodbId = require('../config/valditeMongodb');
 
@@ -7,26 +7,36 @@ const Lesson = require('../models/lessonModel');
 
 
 const postALesson = asyncHandler(async (req, res) => {
-
   try {
+    const { courseId } = req.body;
+    validateMongodbId(courseId);
+
+    if (!courseId) {
+      throw new Error('Course Id is required');
+    }
 
     if (req.body.title) {
-      req.body.slug = slugify(req.body.title.toLowerCase())
+      req.body.slug = slugify(req.body.title.toLowerCase());
     }
-    const lesson = await Lesson.create(req.body)
 
+
+    const lesson = await Lesson.create({ ...req.body, courseId });
+
+    const course = await Course.findById(courseId);
+    if (course) {
+      course.lessons.push(lesson._id);
+      await course.save();
+    }
 
     res.status(200).json({
       status: true,
       message: 'Lesson Created Successfully',
-    })
+      lesson
+    });
   } catch (err) {
-    throw new Error(err)
+    throw new Error(err);
   }
 });
-
-
-
 
 
 const getAllLessons = asyncHandler(async (req, res) => {
@@ -83,34 +93,58 @@ const getSingleLesson = asyncHandler(async (req, res) => {
 
 
 const deleteALesson = asyncHandler(async (req, res) => {
-  const { id } = req.params
+  const { id } = req.params;
   validateMongodbId(id);
   try {
+    // Find the lesson and delete it
+    const lesson = await Lesson.findByIdAndDelete(id);
 
-    const lesson = await Lesson.findByIdAndDelete(id)
+    if (!lesson) {
+      return res.status(404).json({
+        status: false,
+        message: 'Lesson not found',
+      });
+    }
+
+    // Find the course associated with the lesson and remove the lesson ID
+    const course = await Course.findOne({ lessons: id });
+    if (course) {
+      course.lessons = course.lessons.filter(lessonId => lessonId.toString() !== id);
+      await course.save();
+    }
 
     res.status(200).json({
       status: true,
       message: 'Lesson Deleted Successfully',
-    })
-
+    });
   } catch (err) {
-    throw new Error(err)
+    throw new Error(err);
   }
-})
+});
 
 
 
 const updateALesson = asyncHandler(async (req, res) => {
   const { id } = req.params
+  const {courseId } = req.body
   validateMongodbId(id);
+  validateMongodbId(courseId);
   try {
 
     if (req.body.title) {
       req.body.slug = slugify(req.body.title.toLowerCase())
     }
+    if(!courseId) {
+      throw new Error('Course Id is required');
+    }
 
-    const lesson = await Lesson.findByIdAndUpdate(id, req.body, { new: true })
+    const lesson = await Lesson.create({ ...req.body, courseId ,new:true });
+
+    const course = await Course.findById(courseId);
+    if (course) {
+      course.lessons.push(lesson._id);
+      await course.save();
+    }
 
     res.status(200).json({
       status: true,

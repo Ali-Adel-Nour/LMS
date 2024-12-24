@@ -51,11 +51,10 @@ let courseSchema = new mongoose.Schema(
       ref: "User",
       required: true
     },
-    lesson: {
+    lessons: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: "Lesson",
-      required: true
-    },
+    }],
     paid:{
       type: Boolean,
       default: false,
