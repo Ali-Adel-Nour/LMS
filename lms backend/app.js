@@ -1,5 +1,5 @@
 const express = require('express');
-const { notFound, handleError } = require('./middleware/errorHandler');
+const {notFound,globalErrorHandler} = require('./middleware/errorHandler');
 const app = express();
 const dotenv = require('dotenv').config();
 const dbConnect = require('./config/dbConfig');
@@ -76,6 +76,6 @@ app.use('/api/v1/course/category', courseCatRouter);
 
 
 app.use(notFound);
-app.use(handleError);
+app.use(globalErrorHandler);
 
 module.exports = app;
