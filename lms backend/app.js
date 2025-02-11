@@ -27,6 +27,7 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const passport = require('passport');
 const passportSetup = require('./utils/passport');
+const configureCors =  require('./config/corsConfig')
 
 app.get('/', (req, res) => {
   res.send(`<a href="http://localhost:4000/google">Login with google</a>`);
@@ -51,8 +52,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api/v1/user', userRouter);
 app.use('/', googleRouter);
-
-
+app.use(configureCors.configureCors());
 app.use('/api/v1/tutorial/category', tutCatRouter);
 app.use('/api/v1/tutorial', tutorialRouter);
 app.use('/api/v1/newsletter', newsLetterRouter);
