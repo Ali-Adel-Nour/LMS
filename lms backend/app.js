@@ -1,5 +1,6 @@
 const express = require('express');
 const {notFound,globalErrorHandler} = require('./middleware/errorHandler');
+
 const app = express();
 const dotenv = require('dotenv').config();
 const dbConnect = require('./config/dbConfig');
@@ -10,6 +11,7 @@ const tutorialRouter = require('./routes/tutorialRoutes');
 const newsLetterRouter = require('./routes/newsLetterRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
 const contactRouter = require('./routes/contactRoutes');
+const { connectRedis } = require('./config/redisConfig');
 
 //const videoRouter = require('./routes/videoRoutes');
 
@@ -46,6 +48,11 @@ app.use(
     }),
   })
 );
+
+
+(async () => {
+  await connectRedis();
+})();
 
 app.use(passport.initialize());
 app.use(passport.session());

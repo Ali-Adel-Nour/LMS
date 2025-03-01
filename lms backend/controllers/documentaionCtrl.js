@@ -2,6 +2,8 @@ const Document = require('../models/documentationModel');
 const asyncHandler = require('express-async-handler');
 const validateMongodbId = require('../config/valditeMongodb');
 
+const { client } = require('../config/redisConfig');
+
 const { default: slugify } = require("slugify")
 
 
@@ -34,6 +36,8 @@ const getAllDocs = asyncHandler(async (req, res) => {
 
     let  { page, size } = req.query;
 
+    const cacheKey = `docs:page${page}:size${size}`;
+
     if (!page) {
       page = 1;
     }
@@ -41,11 +45,23 @@ const getAllDocs = asyncHandler(async (req, res) => {
       size = 10;
     }
 
+
+    const cachedDocs = await client.get(cacheKey);
+    if (cachedDocs) {
+      return res.status(200).json({
+        status: true,
+        page, size,
+        message: 'Documents Fetched from Cache',
+        data: JSON.parse(cachedDocs)
+      });
+    }
+
     const limit = parseInt(size);
     const skip = (page - 1) * size;
 
     const doc = await Document.find().limit(limit).skip(skip)
 
+     client.setEx(cacheKey, 3600, JSON.stringify(doc));
     res.status(200).json({
 
       status: true,
