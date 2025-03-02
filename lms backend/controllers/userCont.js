@@ -7,6 +7,8 @@ const validateMongodbId = require('../config/valditeMongodb');
 
 const sendEmail = require('../controllers/emailCtrl');
 
+const {client} = require('../config/redisConfig');
+
 const crypto = require('crypto');
 //Create A User
 
@@ -60,25 +62,50 @@ const getAllUsers = asyncHandler(async (req, res) => {
   try {
     let { page, size } = req.query;
 
-    if (!page) {
-      page = 1;
+
+    page = parseInt(page) || 1
+    size = parseInt(size) || 10
+
+
+    page = Math.max(page, 1)
+    size = Math.max(size, 1)
+
+
+    const cacheKey = `docs:page${page}:size${size}`;
+
+
+    const cachedUsers = await client.get(cacheKey);
+    if (cachedUsers) {
+      return res.status(200).json({
+        status: true,
+        page,
+        size,
+        message: 'Users Fetched from Cache',
+        data: JSON.parse(cachedUsers)
+      });
     }
-    if (!size) {
-      size = 10;
-    }
+
 
     const limit = parseInt(size);
     const skip = (page - 1) * size;
 
     const allUsers = await User.find().limit(limit).skip(skip);
+
+
+    await client.setEx(cacheKey, 3600, JSON.stringify(allUsers)); // 1 hour expiration
+
     res.status(200).json({
       status: true,
-      page,size,
+      page,
+      size,
       message: 'All Users Fetched successfully',
-      allUsers,
+      data: allUsers,
     });
   } catch (err) {
-    throw new Error(err);
+    res.status(500).json({
+      status: false,
+      message: err.message
+    });
   }
 });
 
