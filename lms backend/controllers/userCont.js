@@ -10,6 +10,8 @@ const sendEmail = require('../controllers/emailCtrl');
 const {client} = require('../config/redisConfig');
 
 const crypto = require('crypto');
+
+const MAX_BLOCK_DURATION = 72
 //Create A User
 
 const registerAUser = asyncHandler(async (req, res) => {
@@ -89,7 +91,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
     const limit = parseInt(size);
     const skip = (page - 1) * size;
 
-    const allUsers = await User.find().limit(limit).skip(skip);
+    const allUsers = await User.find().lean().limit(limit).skip(skip);
 
 
     await client.setEx(cacheKey, 3600, JSON.stringify(allUsers)); // 1 hour expiration
@@ -110,7 +112,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
 });
 
 const getAUser = asyncHandler(async (req, res) => {
-  const id = req.params;
+  const {id} = req.params;
   try {
     const getProfile = await User.findById(id);
 
@@ -128,14 +130,14 @@ const getAUser = asyncHandler(async (req, res) => {
 //Update user profile
 
 const updateUser = asyncHandler(async (req, res) => {
-  const { _id } = req.user;
+  const { id } = req.user;
 
   // Validate MongoDB ID
-  validateMongodbId(_id);
+  validateMongodbId(id);
 
   try {
     const user = await User.findByIdAndUpdate(
-      _id,
+      id,
       req.body,
       { new: true } // Corrected position of the option
     );
@@ -159,11 +161,11 @@ const updateUser = asyncHandler(async (req, res) => {
 //delete a user
 
 const deleteUser = asyncHandler(async (req, res) => {
-  const { _id } = req.params;
+  const { id } = req.params;
   //console.log('User ID to be deleted:', _id);
-  validateMongodbId(_id);
+  validateMongodbId(id);
   try {
-    await User.findByIdAndDelete(_id);
+    await User.findByIdAndDelete(id);
 
     res.status(200).json({
       status: true,
@@ -175,49 +177,168 @@ const deleteUser = asyncHandler(async (req, res) => {
 });
 
 //Block A user
-
 const blockUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  const { reason, blockDurationHours = 0 } = req.body;
+
+  // Validate inputs
   validateMongodbId(id);
+
+  const duration = Math.max(0, Math.min(parseInt(blockDurationHours) || 0, MAX_BLOCK_DURATION));
+
   try {
-    const block = await User.findByIdAndUpdate(id,
-      { isblocked: true },
-      { new: true },
-    );
+    const [user, admin] = await Promise.all([
+      User.findById(id),
+      User.findById(req.user._id)
+    ]);
+
+    if (!user) {
+      return res.status(404).json({
+        status: false,
+        message: 'User not found'
+      });
+    }
+
+    if (user.isBlocked) {
+      return res.status(400).json({
+        status: false,
+        message: 'User is already blocked'
+      });
+    }
+
+    if(!reason){
+      return res.status(400).json({
+        status: false,
+        message: 'Please provide a valid reason for blocking'
+      });
+    }
+
+    const blockDetails = {
+      reason,
+      blockedBy: admin._id,
+      blockedAt: new Date(),
+      blockExpires: duration > 0
+        ? new Date(Date.now() + duration * 60 * 60 * 1000)
+        : null
+    };
+
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      {
+        isBlocked: true,
+        blockDetails,
+        $push: {
+          blockHistory: {
+            ...blockDetails,
+            blockDuration: duration,
+            unblockedAt: null
+          }
+        }
+      },
+      { new: true, runValidators: true }
+    ).select('-password');
+
     res.status(200).json({
       status: true,
-      message: 'User Block successfully',
+      message: 'User blocked successfully',
+      data: {
+        user: updatedUser,
+        blockDetails: updatedUser.blockDetails
+      }
     });
-  } catch (err) {
-    throw new Error(err);
+
+  } catch (error) {
+    res.status(500).json({
+      status: false,
+      message: error.message
+    });
   }
 });
+
+
+
+// const getBlockHistory = asyncHandler(async (req, res) => {
+//   const { id } = req.params;
+//   let { page = 1, size = 10 } = req.query;
+
+
+//   if (!id) {
+//     return res.status(400).json({ status: false, message: 'User ID is required' });
+//   }
+
+//   try {
+
+//     validateMongodbId(id);
+
+//     page = Math.max(parseInt(page) || 1);
+//     size = Math.min(parseInt(size) || 10, 100);
+
+//     const user = await User.findById(id).select('blockHistory').lean();
+//     if (!user) {
+//       return res.status(404).json({ status: false, message: 'User not found' });
+//     }
+
+//     const blockHistory = user.blockHistory || [];
+//     const total = blockHistory.length;
+//     const totalPages = Math.ceil(total / size);
+//     const startIndex = (page - 1) * size;
+//     const endIndex = page * size;
+
+//     if (startIndex > total) {
+//       return res.status(400).json({ status: false, message: 'Page number out of range' });
+//     }
+
+//     const paginatedHistory = blockHistory
+//       .sort((a, b) => b.blockedAt - a.blockedAt)
+//       .slice(startIndex, endIndex);
+
+//     res.status(200).json({
+//       status: true,
+//       data: paginatedHistory,
+//       pagination: {
+//         total,
+//         page,
+//         size,
+//         totalPages,
+//         hasNextPage: endIndex < total,
+//         hasPrevPage: startIndex > 0
+//       }
+//     });
+
+//   } catch (error) {
+//     const statusCode = error.name === 'CastError' ? 400 : 500;
+//     res.status(statusCode).json({
+//       status: false,
+//       message: error.message
+//     });
+//   }
+// });
 
 //Unblock A user
 
-const unblockUser = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  validateMongodbId(id);
-  try {
-    const unblock = await User.findByIdAndUpdate(id,
-      { isblocked: false },
-      { new: true },
-    );
-    res.status(200).json({
-      status: true,
-      message: 'User Unblocked successfully',
-    });
-  } catch (err) {
-    throw new Error(err);
-  }
-});
+// const unblockUser = asyncHandler(async (req, res) => {
+//   const { id } = req.params;
+//   validateMongodbId(id);
+//   try {
+//     const unblock = await User.findByIdAndUpdate(id,
+//       { isblocked: false },
+//       { new: true },
+//     );
+//     res.status(200).json({
+//       status: true,
+//       message: 'User Unblocked successfully',
+//     });
+//   } catch (err) {
+//     throw new Error(err);
+//   }
+// });
 
 const updatePassword = asyncHandler(async (req, res) => {
-  const { _id } = req.user;
+  const { id } = req.user;
   const { password } = req.body;
-  validateMongodbId(_id);
+  validateMongodbId(id);
   try {
-    const user = await User.findById(_id);
+    const user = await User.findById(id);
     if (user && password && (await user.isPasswordMatch(password))) {
       throw new Error('Please provide a new password insted of old one');
     } else {
@@ -287,6 +408,7 @@ module.exports = {
   updateUser,
   deleteUser,
   blockUser,
+  getBlockHistory,
   unblockUser,
   updatePassword,
   forgotPasswordToken,

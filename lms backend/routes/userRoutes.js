@@ -8,13 +8,14 @@ const {
     updateUser,
     deleteUser,
     blockUser,
+    getBlockHistory,
     unblockUser,
     updatePassword,
     resetPassword,
     forgotPasswordToken,
 } = require('../controllers/userCont');
 
-const { isAdmin, authMiddleware } = require('../middleware/authMiddleware');
+const { isAdmin, authMiddleware,autoUnblock } = require('../middleware/authMiddleware');
 
 const rateLimter = require("../middleware/rateLimiter")
 
@@ -27,16 +28,23 @@ userRouter.post('/forgot-password', rateLimter, forgotPasswordToken);
 
 
 //Get all routes
+
+
 userRouter.get('/all-users', authMiddleware, isAdmin, rateLimter, getAllUsers);
 
-userRouter.get('/:_id', authMiddleware, rateLimter, getAUser);
+
+userRouter.get('/block-history/:id', authMiddleware, isAdmin, rateLimter, getBlockHistory);
+
+userRouter.get('/:id', authMiddleware, rateLimter, getAUser);
+
+
 
 //all (put) routes
 
 
 userRouter.put('/update-profile/:id', authMiddleware, rateLimter, updateUser);
 
-userRouter.put('/block/:id', authMiddleware, isAdmin, rateLimter, blockUser);
+userRouter.put('/block/:id', authMiddleware, isAdmin, rateLimter,autoUnblock, blockUser);
 
 userRouter.put('/unblock/:id', authMiddleware, isAdmin, rateLimter, unblockUser);
 
@@ -47,7 +55,7 @@ userRouter.put('/reset-password/:token', rateLimter, resetPassword);
 
 //Delete
 
-userRouter.delete('/:_id', authMiddleware, isAdmin, rateLimter, deleteUser);
+userRouter.delete('/:id', authMiddleware, isAdmin, rateLimter, deleteUser);
 
 
 module.exports = userRouter;
