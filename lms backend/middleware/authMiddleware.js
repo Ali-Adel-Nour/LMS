@@ -62,4 +62,21 @@ const isBoth = asyncHandler(async(req,res,next)=>{
   }
 })
 
-module.exports = { authMiddleware, isAdmin, isInstructor,isBoth }
+
+const autoUnblock = async (req, res, next) => {
+  if (req.method === 'GET' && req.path.includes('/users/')) {
+    await User.updateMany(
+      {
+        isBlocked: true,
+        'blockDetails.blockExpires': { $lte: new Date() }
+      },
+      {
+        $set: { isBlocked: false },
+        $unset: { blockDetails: 1 }
+      }
+    );
+  }
+  next();
+};
+
+module.exports = { authMiddleware, isAdmin, isInstructor,isBoth,autoUnblock }
