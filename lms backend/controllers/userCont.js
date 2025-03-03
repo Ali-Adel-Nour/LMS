@@ -257,82 +257,119 @@ const blockUser = asyncHandler(async (req, res) => {
 
 
 
-// const getBlockHistory = asyncHandler(async (req, res) => {
-//   const { id } = req.params;
-//   let { page = 1, size = 10 } = req.query;
+const getBlockHistory = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  let { page = 1, size = 10 } = req.query;
 
 
-//   if (!id) {
-//     return res.status(400).json({ status: false, message: 'User ID is required' });
-//   }
+  if (!id) {
+    return res.status(400).json({ status: false, message: 'User ID is required' });
+  }
 
-//   try {
+  try {
 
-//     validateMongodbId(id);
+    validateMongodbId(id);
 
-//     page = Math.max(parseInt(page) || 1);
-//     size = Math.min(parseInt(size) || 10, 100);
+    page = Math.max(parseInt(page) || 1);
+    size = Math.min(parseInt(size) || 10, 100);
 
-//     const user = await User.findById(id).select('blockHistory').lean();
-//     if (!user) {
-//       return res.status(404).json({ status: false, message: 'User not found' });
-//     }
+    const user = await User.findById(id).select('blockHistory').lean();
+    if (!user) {
+      return res.status(404).json({ status: false, message: 'User not found' });
+    }
 
-//     const blockHistory = user.blockHistory || [];
-//     const total = blockHistory.length;
-//     const totalPages = Math.ceil(total / size);
-//     const startIndex = (page - 1) * size;
-//     const endIndex = page * size;
+    const blockHistory = user.blockHistory || [];
+    const total = blockHistory.length;
+    const totalPages = Math.ceil(total / size);
+    const startIndex = (page - 1) * size;
+    const endIndex = page * size;
 
-//     if (startIndex > total) {
-//       return res.status(400).json({ status: false, message: 'Page number out of range' });
-//     }
+    if (startIndex > total) {
+      return res.status(400).json({ status: false, message: 'Page number out of range' });
+    }
 
-//     const paginatedHistory = blockHistory
-//       .sort((a, b) => b.blockedAt - a.blockedAt)
-//       .slice(startIndex, endIndex);
+    const paginatedHistory = blockHistory
+      .sort((a, b) => b.blockedAt - a.blockedAt)
+      .slice(startIndex, endIndex);
 
-//     res.status(200).json({
-//       status: true,
-//       data: paginatedHistory,
-//       pagination: {
-//         total,
-//         page,
-//         size,
-//         totalPages,
-//         hasNextPage: endIndex < total,
-//         hasPrevPage: startIndex > 0
-//       }
-//     });
+    res.status(200).json({
+      status: true,
+      data: paginatedHistory,
+      pagination: {
+        total,
+        page,
+        size,
+        totalPages,
+        hasNextPage: endIndex < total,
+        hasPrevPage: startIndex > 0
+      }
+    });
 
-//   } catch (error) {
-//     const statusCode = error.name === 'CastError' ? 400 : 500;
-//     res.status(statusCode).json({
-//       status: false,
-//       message: error.message
-//     });
-//   }
-// });
+  } catch (error) {
+    const statusCode = error.name === 'CastError' ? 400 : 500;
+    res.status(statusCode).json({
+      status: false,
+      message: error.message
+    });
+  }
+});
 
 //Unblock A user
 
-// const unblockUser = asyncHandler(async (req, res) => {
-//   const { id } = req.params;
-//   validateMongodbId(id);
-//   try {
-//     const unblock = await User.findByIdAndUpdate(id,
-//       { isblocked: false },
-//       { new: true },
-//     );
-//     res.status(200).json({
-//       status: true,
-//       message: 'User Unblocked successfully',
-//     });
-//   } catch (err) {
-//     throw new Error(err);
-//   }
-// });
+const unblockUser = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const adminId = req.user._id;
 
+  try {
+
+    validateMongodbId(id);
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({
+        status: false,
+        message: 'User not found'
+      });
+    }
+
+    if (!user.isBlocked) {
+      return res.status(400).json({
+        status: false,
+        message: 'User is not blocked'
+      });
+    }
+
+    // Update block history
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      {
+        isBlocked: false,
+        blockDetails: null,
+        $set: {
+          'blockHistory.$[elem].unblockedAt': new Date(),
+          'blockHistory.$[elem].unblockedBy': adminId
+        }
+      },
+      {
+        new: true,
+        arrayFilters: [{ 'elem.unblockedAt': null }]
+      }
+    );
+
+    res.status(200).json({
+      status: true,
+      message: 'User unblocked successfully',
+      data: {
+        user: updatedUser
+      }
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      status: false,
+      message: error.message
+    });
+  }
+});
 const updatePassword = asyncHandler(async (req, res) => {
   const { id } = req.user;
   const { password } = req.body;
