@@ -11,8 +11,11 @@ const {
     getBlockHistory,
     unblockUser,
     updatePassword,
-    resetPassword,
     forgotPasswordToken,
+    resetPassword
+
+
+
 } = require('../controllers/userCont');
 
 const { isAdmin, authMiddleware,autoUnblock } = require('../middleware/authMiddleware');
@@ -25,6 +28,7 @@ const userRouter = express.Router();
 userRouter.post('/register', rateLimter, registerAUser);
 userRouter.post('/login', rateLimter, loginUser);
 userRouter.post('/forgot-password', rateLimter, forgotPasswordToken);
+
 
 
 //Get all routes
@@ -50,7 +54,9 @@ userRouter.put('/unblock/:id', authMiddleware, isAdmin, rateLimter, unblockUser)
 
 userRouter.put('/update-password', authMiddleware, rateLimter, updatePassword);
 
-userRouter.put('/reset-password/:token', rateLimter, resetPassword);
+
+
+userRouter.patch('/reset-password/:token', rateLimter, resetPassword);
 
 
 //Delete
