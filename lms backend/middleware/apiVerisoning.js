@@ -3,18 +3,22 @@ const LATEST_VERSION = SUPPORTED_VERSIONS[SUPPORTED_VERSIONS.length - 1];
 
 const isValidVersion = (version) => SUPPORTED_VERSIONS.includes(version);
 
-const urlVersioning = (version) => (req, res, next) => {
-  const requestedVersion = req.path.split('/')[2];
+const versionRegex = /\/api\/(v\d+)/i;
 
-  if (!isValidVersion(requestedVersion)) {
+const urlVersioning = () => (req, res, next) => {
+  const requestedVersion = req.path.match(versionRegex)?.[1]?.toLowerCase();
+
+  if (!requestedVersion || !isValidVersion(requestedVersion)) {
+    console.error(`Invalid API version requested: ${requestedVersion}`);
     return res.status(400).json({
       success: false,
-      error: `API version ${requestedVersion} not supported`,
+      error: `API version ${requestedVersion || 'undefined'} not supported`,
       supportedVersions: SUPPORTED_VERSIONS,
       latestVersion: LATEST_VERSION,
       example: `/api/${LATEST_VERSION}/resource`
     });
   }
+
   next();
 };
 
