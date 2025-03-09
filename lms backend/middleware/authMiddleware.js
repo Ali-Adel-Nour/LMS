@@ -29,38 +29,83 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
 })
 
 
-const isAdmin = asyncHandler(async (req, res, next) => {
-  const { email } = req.user
-  const isAdmin = await User.findOne({ email: email })
-  if (isAdmin.roles !== "admin") {
-    throw new Error("You are not an Admin")
-  } else {
-    next()
-  }
-})
+// const isAdmin = asyncHandler(async (req, res, next) => {
+//   const { email } = req.user
+//   const user = await User.findOne({ email: email })
+//   if (!user) {
+//     return res.status(404).json({
+//       success: false,
+//       message: "User not found"
+//     });
+//   } else if (user.roles !== "admin") {
+//     throw new Error("You are not an Admin")
+//   } else {
+//     next()
+//   }
+// })
 
 
-const isInstructor = asyncHandler(async (req, res, next) => {
-  const { email } = req.user
-  const isInstructor = await User.findOne({ email: email })
-  if (isInstructor.roles !== "instructor") {
-    throw new Error("You are not an Instructor")
-  } else {
-    next()
-  }
-})
+// const isInstructor = asyncHandler(async (req, res, next) => {
+//   const { email } = req.user
+//   const isInstructor = await User.findOne({ email: email })
+//   if (isInstructor.roles !== "instructor") {
+//     throw new Error("You are not an Instructor")
+//   } else {
+//     next()
+//   }
+// })
+
+const ROLES = {
+  ADMIN: 'admin',
+  INSTRUCTOR: 'instructor',
+  ISBOTH: 'isboth'
+};
+
+const checkRole = (role) => {
+  return asyncHandler(async (req, res, next) => {
+    const { email } = req.user;
+
+    const user = await User.findOne({ email }).select('roles').lean();
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Ensure roles is an array and check if role exists
+    if (!user.roles || !user.roles.includes(role)) {
+      return res.status(403).json({
+        success: false,
+        message: `Access denied. You must be a ${role} to access this resource`
+      });
+    }
+
+    next();
+  });
+};
 
 
-const isBoth = asyncHandler(async(req,res,next)=>{
-  const {email} = req.user
-  const isBoth = await User.findOne({email:email})
-  if((isBoth.roles !== "admin" || isBoth.roles !== "instructor") == false){
-    throw new Error("You shoud be admin or instructor")
+const isBoth = asyncHandler(async (req, res, next) => {
+  const { email } = req.user;
+
+  const user = await User.findOne({ email }).select('roles').lean();
+  if (!user) {
+    return res.status(404).json({ success: false, message: "User not found" });
   }
-  else{
-    next()
+
+  // Ensure user has both 'admin' and 'instructor' roles
+  const hasBothRoles = user.roles && user.roles.includes(ROLES.ADMIN) && user.roles.includes(ROLES.INSTRUCTOR);
+
+  if (!hasBothRoles) {
+    return res.status(403).json({
+      success: false,
+      message: "Access denied. You must be both an admin and an instructor."
+    });
   }
-})
+
+  next();
+});
 
 
 const autoUnblock = async (req, res, next) => {
@@ -78,5 +123,8 @@ const autoUnblock = async (req, res, next) => {
   }
   next();
 };
+
+const isAdmin = checkRole(ROLES.ADMIN);
+const isInstructor = checkRole(ROLES.INSTRUCTOR);
 
 module.exports = { authMiddleware, isAdmin, isInstructor,isBoth,autoUnblock }
