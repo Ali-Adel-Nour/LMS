@@ -52,10 +52,10 @@ userRouter.put('/block/:id', authMiddleware, isAdmin, rateLimter,autoUnblock, bl
 
 userRouter.put('/unblock/:id', authMiddleware, isAdmin, rateLimter, unblockUser);
 
-userRouter.put('/update-password', authMiddleware, rateLimter, updatePassword);
 
 
-
+//Patch Routes
+userRouter.patch('/update-password/:id', authMiddleware, rateLimter, updatePassword);
 userRouter.patch('/reset-password/:token', rateLimter, resetPassword);
 
 

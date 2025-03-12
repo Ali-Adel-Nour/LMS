@@ -373,23 +373,60 @@ const unblockUser = asyncHandler(async (req, res) => {
 });
 const updatePassword = asyncHandler(async (req, res) => {
   const { id } = req.user;
-  const { password } = req.body;
+  const { currentPassword, newPassword } = req.body;
+
   validateMongodbId(id);
+
   try {
     const user = await User.findById(id);
-    if (user && password && (await user.isPasswordMatch(password))) {
-      throw new Error('Please provide a new password insted of old one');
-    } else {
-      user.password = password;
-      await user.save();
-      console.log(user.password);
-      res.status(200).json({
-        status: true,
-        message: 'Password updated successfully',
+
+    if (!user) {
+      return res.status(404).json({
+        status: false,
+        message: 'User not found'
       });
     }
-  } catch (err) {
-    throw new Error(err);
+
+    // Check if both passwords are provided
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        status: false,
+        message: 'Both current password and new password are required'
+      });
+    }
+
+    // Verify current password
+    const isPasswordMatch = await user.isPasswordMatch(currentPassword);
+    if (!isPasswordMatch) {
+      return res.status(400).json({
+        status: false,
+        message: 'Current password is incorrect'
+      });
+    }
+
+    // Check if new password is same as current
+    if (currentPassword === newPassword) {
+      return res.status(400).json({
+        status: false,
+        message: 'New password must be different from current password'
+      });
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    res.status(200).json({
+      status: true,
+      message: 'Password updated successfully'
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      status: false,
+      message: 'Error updating password',
+      error: error.message
+    });
   }
 });
 
