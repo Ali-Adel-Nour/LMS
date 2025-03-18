@@ -159,6 +159,74 @@ const updateUser = asyncHandler(async (req, res) => {
   }
 });
 
+
+const updateUserDetails = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const adminId = req.user._id; // Get admin ID from auth middleware
+
+  try {
+    // Validate both IDs
+    validateMongodbId(userId);
+    validateMongodbId(adminId);
+
+    // Check if admin exists and has admin role
+    const admin = await User.findById(adminId);
+    if (!admin || admin.roles !== 'admin') {
+      return res.status(403).json({
+        status: false,
+        message: 'Not authorized to update user details'
+      });
+    }
+
+    if(req.body.password ){
+      return res.status(400).json({
+        status: false,
+        message: 'Password cannot be updated'
+      });
+    }
+
+    // Find and update user
+    const user = await User.findByIdAndUpdate(
+      userId,
+
+      /*
+      1-Update a document with new data from a request
+      2-Track who made the change
+      3-Ensure the updates are valid
+   4- Get back the updated version of the document
+      */
+      {
+        ...req.body,
+        updatedBy: adminId
+      },
+      {
+        new: true,
+        runValidators: true
+      }
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        status: false,
+        message: 'User not found'
+      });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: 'Profile updated successfully',
+      data: {
+        user,
+        updatedBy: admin.firstname + ' ' + admin.lastname
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: false,
+      message: error.message
+    });
+  }
+});
 //delete a user
 
 const deleteUser = asyncHandler(async (req, res) => {
@@ -525,6 +593,7 @@ module.exports = {
   getAllUsers,
   getAUser,
   updateUser,
+  updateUserDetails,
   deleteUser,
   blockUser,
   getBlockHistory,

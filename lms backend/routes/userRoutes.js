@@ -6,6 +6,7 @@ const {
     getAllUsers,
     getAUser,
     updateUser,
+    updateUserDetails,
     deleteUser,
     blockUser,
     getBlockHistory,
@@ -48,6 +49,7 @@ userRouter.get('/:id', authMiddleware, rateLimter, getAUser);
 
 userRouter.put('/update-profile/:id', authMiddleware, rateLimter, updateUser);
 
+
 userRouter.put('/block/:id', authMiddleware, isAdmin, rateLimter,autoUnblock, blockUser);
 
 userRouter.put('/unblock/:id', authMiddleware, isAdmin, rateLimter, unblockUser);
@@ -57,6 +59,7 @@ userRouter.put('/unblock/:id', authMiddleware, isAdmin, rateLimter, unblockUser)
 //Patch Routes
 userRouter.patch('/update-password/:id', authMiddleware, rateLimter, updatePassword);
 userRouter.patch('/reset-password/:token', rateLimter, resetPassword);
+userRouter.patch('/update-user-profile/:userId',authMiddleware,isAdmin,rateLimter,updateUserDetails)
 
 
 //Delete
