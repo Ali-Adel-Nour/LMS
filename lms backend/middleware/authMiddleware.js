@@ -10,23 +10,34 @@ const validateMongodbId = require('../config/valditeMongodb')
 
 const authMiddleware = asyncHandler(async (req, res, next) => {
   let token;
-  // Equal to = if (req && req.headers && req.headers.authorization && req.headers.authorization.startsWith("Bearer ")
-  if (req?.headers?.authorization?.startsWith("Bearer ")) {
-    token = req.headers?.authorization?.split(" ")[1];
-    try {
-      if (token) {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET)
-        const user = await User.findById(decoded?.id)
-        req.user = user
-        next()
-      }
-    } catch (error) {
-      throw new Error("Not authorized,Please login agin")
-    }
-  } else {
-    throw new Error("There is no token attached to the header")
+
+  // Check for token in cookies first
+  if (req.cookies.token) {
+    token = req.cookies.token;
   }
-})
+  // Fallback to Bearer token in header
+  else if (req?.headers?.authorization?.startsWith("Bearer ")) {
+    token = req.headers.authorization.split(" ")[1];
+  }
+
+  if (!token) {
+    throw new Error("Not authorized, please login again");
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded?.id).select('-password');
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    req.user = user;
+    next();
+  } catch (error) {
+    throw new Error("Not authorized, token failed");
+  }
+});
 
 
 // const isAdmin = asyncHandler(async (req, res, next) => {

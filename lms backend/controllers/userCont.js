@@ -16,26 +16,28 @@ const MAX_BLOCK_DURATION = 72
 //Create A User
 
 const registerAUser = asyncHandler(async (req, res) => {
-  //Get the email from req.body and find whether a user with this email exists or not
+  const { email } = req.body;
 
-  const email = req.body.email;
-
-  //Find the user with this email get from req.body
-
-  const findUser = await User.findOne({ email: email });
-
-  // create a user
-  if (!findUser) {
-    const createUser = await User.create(req.body);
-    res.status(200).json({
-      status: true,
-      message: 'User create successfully',
-      createUser,
-    });
-  } else {
-    throw new Error('User Already Exists');
+  // Check if user already exists
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    throw new Error("User Already Exists");
   }
+
+  // Create a new user
+  const newUser = await User.create(req.body);
+
+  // Remove password from response
+  const userResponse = newUser.toObject();
+  delete userResponse.password;
+
+  res.status(201).json({
+    success: true,
+    message: "User created successfully",
+    user: userResponse,
+  });
 });
+
 //login a user
 
 const loginUser = asyncHandler(async (req, res) => {
@@ -45,20 +47,30 @@ const loginUser = asyncHandler(async (req, res) => {
 
   const findUser = await User.findOne({ email: email });
 
+
   if (findUser && (await findUser.isPasswordMatch(password))) {
+    const token = generateToken(findUser._id);
+
+    // Set JWT as HTTP-Only cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    });
+
     res.status(200).json({
       status: true,
       message: 'Logged In Successfully',
-      token: generateToken(findUser?._id),
+      token, // Optional: still sending token in response
       role: findUser?.roles,
       username: findUser?.firstname + ' ' + findUser?.lastname,
       user_image: findUser?.user_image,
     });
   } else {
-    throw new Error('Invalid Creditnails');
+    throw new Error('Invalid Credentials');
   }
 });
-
 //Get all users
 
 const getAllUsers = asyncHandler(async (req, res) => {

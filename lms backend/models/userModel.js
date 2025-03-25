@@ -35,6 +35,7 @@ let userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
+    select: false
   },
   roles: {
     type: String,

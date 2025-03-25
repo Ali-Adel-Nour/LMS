@@ -32,6 +32,10 @@ const passportSetup = require('./utils/passport');
 const configureCors =  require('./config/corsConfig')
 const {requestLogger,addTimeStamp} = require('./middleware/logger');
 const { urlVersioning } = require('./middleware/apiVerisoning')
+const cookieParser = require('cookie-parser');
+
+
+
 
 app.get('/', (req, res) => {
   res.send(`<a href="http://localhost:4000/google">Login with google</a>`);
@@ -68,6 +72,7 @@ app.use('/', googleRouter);
 
 app.use(urlVersioning('v1'));
 
+app.use(cookieParser());
 
 app.use('/api/v1/user', userRouter);
 
