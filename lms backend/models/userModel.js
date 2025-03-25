@@ -46,6 +46,13 @@ let userSchema = new mongoose.Schema({
     required: true,
   },
 
+  active:{
+    type: Boolean,
+    default: true,
+    select:false
+
+  },
+
   isBlocked: { // Use camelCase for consistency
     type: Boolean,
     default: false,
@@ -107,6 +114,7 @@ let userSchema = new mongoose.Schema({
       min: 0,
       default: 0 // 0 = permanent block
     }
+
   }],
   passwordChangedAt: Date,
   passwordResetToken: String,
@@ -128,7 +136,13 @@ userSchema.pre("save", async function (next) {
   this.password = await bcrypt.hash(this.password, salt)
   next()
 })
+//any query satrt with find
 
+userSchema.pre(/^find/, function (next) {
+
+  this.find({active:{$ne:false}});
+  next()
+})
 
 userSchema.methods.isPasswordMatch = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password)
