@@ -231,17 +231,37 @@ const updateUserDetails = asyncHandler(async (req, res) => {
 
 const deleteUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  //console.log('User ID to be deleted:', _id);
-  validateMongodbId(id);
+
   try {
-    await User.findByIdAndDelete(id);
+    // Validate MongoDB ID
+    validateMongodbId(id);
+
+ // Soft delete by updating active status
+ const updatedUser = await User.findByIdAndUpdate(
+  id,
+  {
+    active: false,
+    //deactivatedAt: new Date(),
+    //deactivatedBy: req.user._id // Track who deleted
+  },
+  { new: true }
+);
+
+    // Clear user from cache if using Redis
+    const cacheKey = `user:${id}`;
+    await client.del(cacheKey);
 
     res.status(200).json({
       status: true,
-      message: 'User Deleted successfully',
+      message: 'User deactivated successfully',
+
     });
-  } catch (err) {
-    throw new Error(err);
+
+  } catch (error) {
+    res.status(500).json({
+      status: false,
+      message: error.message
+    });
   }
 });
 
