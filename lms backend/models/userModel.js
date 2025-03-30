@@ -129,14 +129,32 @@ let userSchema = new mongoose.Schema({
 
 });
 
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    next()
+userSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) {
+    return next();
   }
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt)
-  next()
-})
+
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Password comparison method
+userSchema.methods.isPasswordMatch = async function(enteredPassword) {
+  try {
+    // Make sure password exists and is a string
+    if (!this.password || !enteredPassword) {
+      return false;
+    }
+    return await bcrypt.compare(enteredPassword, this.password);
+  } catch (error) {
+    throw new Error('Password comparison failed');
+  }
+};
 //any query satrt with find
 
 userSchema.pre(/^find/, function (next) {
@@ -145,9 +163,7 @@ userSchema.pre(/^find/, function (next) {
   next()
 })
 
-userSchema.methods.isPasswordMatch = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password)
-}
+
 
 
 userSchema.methods.createPasswordResetToken = async function () {

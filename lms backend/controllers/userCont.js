@@ -44,12 +44,30 @@ const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   //check if user exists or not
+try{
+  const user = await User.findOne({ email }).select('+password');
 
-  const findUser = await User.findOne({ email: email });
+    if (!user) {
+      return res.status(401).json({
+        status: false,
+        message: 'Invalid email or password'
+      });
+    }
 
+    // Verify password
+    const isMatch = await user.isPasswordMatch(password);
+    if (!isMatch) {
+      return res.status(401).json({
+        status: false,
+        message: 'Invalid email or password'
+      });
+    }
 
-  if (findUser && (await findUser.isPasswordMatch(password))) {
-    const token = generateToken(findUser._id);
+    const token = generateToken(user._id);
+
+    // Remove password from response
+    const userResponse = user.toObject();
+    delete userResponse.password;
 
     // Set JWT as HTTP-Only cookie
     res.cookie('token', token, {
@@ -63,12 +81,16 @@ const loginUser = asyncHandler(async (req, res) => {
       status: true,
       message: 'Logged In Successfully',
       token, // Optional: still sending token in response
-      role: findUser?.roles,
-      username: findUser?.firstname + ' ' + findUser?.lastname,
-      user_image: findUser?.user_image,
+      role: user?.roles,
+      username: user?.firstname + ' ' + user?.lastname,
+      user_image: user?.user_image,
     });
-  } else {
-    throw new Error('Invalid Credentials');
+  } catch (error) {
+    res.status(500).json({
+      status: false,
+      message: 'Login failed',
+      error: error.message
+    });
   }
 });
 //Get all users
