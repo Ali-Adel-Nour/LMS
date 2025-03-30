@@ -34,8 +34,9 @@ const {requestLogger,addTimeStamp} = require('./middleware/logger');
 const { urlVersioning } = require('./middleware/apiVerisoning')
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
-
-
+const sanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp')
 app.get('/', (req, res) => {
   res.send(`<a href="http://localhost:4000/google">Login with google</a>`);
 });
@@ -67,7 +68,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger);
 app.use(addTimeStamp);
 app.use(configureCors.configureCors());
-
+app.use(sanitize());
+app.use(xss());
+//HTTP Parameter Pollution
+app.use(hpp(whitelist = []))
 
 app.use('/', googleRouter);
 
