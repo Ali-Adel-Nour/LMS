@@ -33,13 +33,14 @@ const configureCors =  require('./config/corsConfig')
 const {requestLogger,addTimeStamp} = require('./middleware/logger');
 const { urlVersioning } = require('./middleware/apiVerisoning')
 const cookieParser = require('cookie-parser');
-
-
+const helmet = require('helmet');
 
 
 app.get('/', (req, res) => {
   res.send(`<a href="http://localhost:4000/google">Login with google</a>`);
 });
+
+app.use(helmet());
 
 app.use(
   session({
@@ -61,7 +62,7 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 // body-parser with built-in Express middleware
-app.use(express.json());
+app.use(express.json(limit = '20kb'));
 app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger);
 app.use(addTimeStamp);
