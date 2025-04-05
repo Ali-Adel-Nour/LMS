@@ -1,45 +1,125 @@
-const User = require('../models/userModel')
-
-const jwt = require('jsonwebtoken')
-
-const asyncHandler = require('express-async-handler')
-
-const validateMongodbId = require('../config/valditeMongodb')
+const User = require('../models/userModel');
+const jwt = require('jsonwebtoken');
+const asyncHandler = require('express-async-handler');
+const validateMongodbId = require('../config/valditeMongodb');
+const blackList = require('../models/blacklistModel');
 
 
-
+// Main authentication middleware - validates access token
 const authMiddleware = asyncHandler(async (req, res, next) => {
   let token;
 
-  // Check for token in cookies first
-  if (req.cookies.token) {
-    token = req.cookies.token;
-  }
-  // Fallback to Bearer token in header
-  else if (req?.headers?.authorization?.startsWith("Bearer ")) {
+  // Get access token from Authorization header (preferred method)
+  if (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
     token = req.headers.authorization.split(" ")[1];
   }
 
   if (!token) {
-    throw new Error("Not authorized, please login again");
+    return res.status(401).json({
+      status: false,
+      message: "Authentication required. Please login."
+    });
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded?.id).select('-password');
-
-    if (!user) {
-      throw new Error("User not found");
+    // First check if token is blacklisted
+    const isBlacklisted = await blackList.findOne({ token });
+    if (isBlacklisted) {
+      return res.status(401).json({
+        status: false,
+        message: "Session expired. Please log in again."
+      });
     }
 
+    // Verify the access token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Check if user exists
+    const user = await User.findById(decoded.id).select('-password');
+    if (!user) {
+      return res.status(404).json({
+        status: false,
+        message: "User not found"
+      });
+    }
+
+    // Check if user is blocked
+    if (user.isBlocked) {
+      // Check if block has expired
+      if (user.blockDetails && user.blockDetails.blockExpires && new Date(user.blockDetails.blockExpires) <= new Date()) {
+        // Auto-unblock user
+        user.isBlocked = false;
+        user.blockDetails = undefined;
+        await user.save();
+      } else {
+        // User is still blocked
+        let message = "Your account has been blocked";
+        if (user.blockDetails && user.blockDetails.reason) {
+          message += ` for the following reason: ${user.blockDetails.reason}`;
+        }
+
+        if (user.blockDetails && user.blockDetails.blockExpires) {
+          const blockEnd = new Date(user.blockDetails.blockExpires);
+          message += `. Block expires on ${blockEnd.toLocaleString()}`;
+        }
+
+        return res.status(403).json({
+          status: false,
+          message
+        });
+      }
+    }
+
+    // Attach user to request
     req.user = user;
     next();
   } catch (error) {
-    throw new Error("Not authorized, token failed");
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        status: false,
+        message: "Invalid token. Please login again."
+      });
+    } else if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        status: false,
+        message: "Token expired. Please refresh your session."
+      });
+    } else {
+      console.error('Authentication error:', error);
+      return res.status(500).json({
+        status: false,
+        message: "Authentication failed due to server error.",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
   }
 });
 
+// Middleware to check if the user is blacklisted
+const verifyBlacklist = asyncHandler(async (req, res, next) => {
+  let token;
 
+  // Extract token from Authorization header
+  if (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
+    token = req.headers.authorization.split(" ")[1];
+  }
+
+  if (!token) {
+    return next(); // No token to check, proceed
+  }
+
+  // Check if token is blacklisted
+  const isBlacklisted = await blackList.findOne({ token });
+
+  if (isBlacklisted) {
+    return res.status(401).json({
+      status: false,
+      message: "Session expired. Please log in again."
+    });
+  }
+
+  next();
+});
 // const isAdmin = asyncHandler(async (req, res, next) => {
 //   const { email } = req.user
 //   const user = await User.findOne({ email: email })
@@ -119,23 +199,100 @@ const isBoth = asyncHandler(async (req, res, next) => {
 });
 
 
-const autoUnblock = async (req, res, next) => {
-  if (req.method === 'GET' && req.path.includes('/users/')) {
-    await User.updateMany(
-      {
-        isBlocked: true,
-        'blockDetails.blockExpires': { $lte: new Date() }
-      },
-      {
-        $set: { isBlocked: false },
-        $unset: { blockDetails: 1 }
+// Middleware to automatically unblock users when their block duration expires
+const autoUnblock = asyncHandler(async (req, res, next) => {
+  try {
+    // Only run this middleware for GET requests to user-related endpoints
+    if (req.method === 'GET' && req.path.includes('/users/')) {
+      const result = await User.updateMany(
+        {
+          isBlocked: true,
+          'blockDetails.blockExpires': { $lte: new Date() }
+        },
+        {
+          $set: { isBlocked: false },
+          $unset: { blockDetails: 1 },
+          $push: {
+            'blockHistory.$[elem].unblockedAt': new Date(),
+            'blockHistory.$[elem].unblockedBy': null,
+            'blockHistory.$[elem].unblockReason': 'Auto-unblocked due to expiration'
+          }
+        },
+        {
+          arrayFilters: [{ 'elem.unblockedAt': null }]
+        }
+      );
+
+      if (result.modifiedCount > 0) {
+        console.log(`Auto-unblocked ${result.modifiedCount} users`);
       }
-    );
+    }
+    next();
+  } catch (error) {
+    console.error('Error in autoUnblock middleware:', error);
+    next(); // Continue even if there's an error
   }
-  next();
-};
+});
 
 const isAdmin = checkRole(ROLES.ADMIN);
 const isInstructor = checkRole(ROLES.INSTRUCTOR);
 
-module.exports = { authMiddleware, isAdmin, isInstructor,isBoth,autoUnblock }
+// Optional middleware that validates refresh token from cookie
+// Useful for routes that specifically need to validate the refresh token
+const validateRefreshToken = asyncHandler(async (req, res, next) => {
+  const token = req.cookies.refreshToken;
+
+  if (!token) {
+    return res.status(401).json({
+      status: false,
+      message: "Refresh token not found. Please log in again."
+    });
+  }
+
+  try {
+    // Import the verifyRefreshToken function dynamically to avoid circular dependencies
+    const { verifyRefreshToken } = require('../config/jwtToken');
+
+    // Verify token
+    const userId = await verifyRefreshToken(token);
+
+    // Get user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        status: false,
+        message: "User not found"
+      });
+    }
+
+    // Attach user to request
+    req.user = user;
+    // Also attach the refresh token for convenience
+    req.refreshToken = token;
+
+    next();
+  } catch (error) {
+    // Clear the invalid refresh token cookie
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict'
+    });
+
+    return res.status(401).json({
+      status: false,
+      message: "Invalid refresh token. Please log in again.",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+module.exports = {
+  authMiddleware,
+  isAdmin,
+  isInstructor,
+  isBoth,
+  autoUnblock,
+  verifyBlacklist,
+  validateRefreshToken
+}

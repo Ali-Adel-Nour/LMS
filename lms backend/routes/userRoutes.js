@@ -13,13 +13,12 @@ const {
     unblockUser,
     updatePassword,
     forgotPasswordToken,
-    resetPassword
-
-
-
+    resetPassword,
+    logout,
+    refreshToken
 } = require('../controllers/userCont');
 
-const { isAdmin, authMiddleware,autoUnblock } = require('../middleware/authMiddleware');
+const { isAdmin, authMiddleware, autoUnblock, verifyBlacklist, validateRefreshToken } = require('../middleware/authMiddleware');
 
 const rateLimter = require("../middleware/rateLimiter")
 
@@ -29,7 +28,8 @@ const userRouter = express.Router();
 userRouter.post('/register', rateLimter, registerAUser);
 userRouter.post('/login', rateLimter, loginUser);
 userRouter.post('/forgot-password', rateLimter, forgotPasswordToken);
-
+userRouter.post('/logout', rateLimter, verifyBlacklist, logout);
+userRouter.post('/refresh-token', rateLimter, refreshToken);
 
 
 //Get all routes
