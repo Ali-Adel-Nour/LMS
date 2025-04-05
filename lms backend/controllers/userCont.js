@@ -1,8 +1,13 @@
 const User = require('../models/userModel');
 
-const asyncHandler = require('express-async-handler');
+//const RefreshToken = require ("../models/refreshTokenModel")
 
-const generateToken = require('../config/jwtToken');
+const  blackList = require("../models/blacklistModel")
+
+const asyncHandler = require('express-async-handler');
+const jwt = require('jsonwebtoken');
+
+const { generateAccessToken, generateRefreshToken, verifyRefreshToken, removeRefreshToken } = require('../config/jwtToken');
 
 const validateMongodbId = require('../config/valditeMongodb');
 
@@ -27,6 +32,10 @@ const registerAUser = asyncHandler(async (req, res) => {
   // Create a new user
   const newUser = await User.create(req.body);
 
+  // Generate and send JWT
+  const accessToken = generateAccessToken(newUser._id);
+  const refreshToken = await generateRefreshToken(newUser);
+
   // Remove password from response
   const userResponse = newUser.toObject();
   delete userResponse.password;
@@ -35,6 +44,8 @@ const registerAUser = asyncHandler(async (req, res) => {
     success: true,
     message: "User created successfully",
     user: userResponse,
+    accessToken,
+    refreshToken
   });
 });
 
@@ -63,27 +74,27 @@ try{
       });
     }
 
-    const token = generateToken(user._id);
 
-    // Remove password from response
-    const userResponse = user.toObject();
-    delete userResponse.password;
+    const accessToken = generateAccessToken(user._id);
+    const refreshToken = await generateRefreshToken(user);
 
     // Set JWT as HTTP-Only cookie
-    res.cookie('token', token, {
+    res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
     res.status(200).json({
       status: true,
       message: 'Logged In Successfully',
-      token, // Optional: still sending token in response
       role: user?.roles,
       username: user?.firstname + ' ' + user?.lastname,
       user_image: user?.user_image,
+      accessToken,
+      refreshToken
+
     });
   } catch (error) {
     res.status(500).json({
@@ -93,6 +104,7 @@ try{
     });
   }
 });
+
 //Get all users
 
 const getAllUsers = asyncHandler(async (req, res) => {
@@ -635,18 +647,156 @@ const resetPassword = asyncHandler(async (req, res) => {
 
 
 
-  const loginToken = generateToken(user._id);
+
+  const accessToken = generateAccessToken(user._id);
   res.status(200).json({
     success: true,
-   token: loginToken,
+    accessToken: accessToken,
   });
 });
+
+const refreshToken = asyncHandler(async (req, res) => {
+  // Get refresh token from cookie or request body
+  const token = req.cookies.refreshToken || req.body.refreshToken;
+
+  if (!token) {
+    return res.status(403).json({
+      status: false,
+      message: 'Refresh token not found'
+    });
+  }
+
+  try {
+    // Verify the refresh token and get user ID
+    const userId = await verifyRefreshToken(token);
+
+    if (!userId) {
+      return res.status(403).json({
+        status: false,
+        message: 'Invalid refresh token'
+      });
+    }
+
+    // Get the user to generate new tokens
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        status: false,
+        message: 'User not found'
+      });
+    }
+
+    // Generate new access token
+    const newAccessToken = generateAccessToken(userId);
+
+    // Generate new refresh token
+    const newRefreshToken = await generateRefreshToken(user);
+
+    // Set refresh token in cookie
+    res.cookie('refreshToken', newRefreshToken, {
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict'
+    });
+
+    // Send new access token to client
+    res.status(200).json({
+      status: true,
+      accessToken: newAccessToken
+    });
+  } catch (error) {
+    console.error('Refresh token error:', error);
+
+    // Clear cookie if token was invalid
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict'
+    });
+
+    res.status(401).json({
+      status: false,
+      message: 'Invalid or expired session. Please log in again.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+})
+
+const logout = asyncHandler(async (req, res) => {
+  try {
+    // Get refresh token from cookie
+    const token = req.cookies.refreshToken;
+
+    // Get access token from Authorization header
+    let accessToken = null;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      accessToken = authHeader.split(' ')[1];
+    }
+
+    if (!token && !accessToken) {
+      return res.status(200).json({
+        status: true,
+        message: "No active session found"
+      });
+    }
+
+    // Blacklist access token if present
+    if (accessToken) {
+      try {
+        // Verify access token to get user ID
+        const decoded = jwt.verify(accessToken, process.env.JWT_SECRET);
+
+        // Add to blacklist with expiry time matching token expiry
+        await blackList.create({
+          token: accessToken,
+          createdAt: new Date()
+        });
+      } catch (error) {
+        console.warn('Invalid access token during logout:', error.message);
+        // Continue with logout even if token is invalid
+      }
+    }
+
+    // Remove refresh token from both Redis and MongoDB
+    if (token) {
+      // Use the new utility function that handles both Redis and MongoDB
+      await removeRefreshToken(token);
+    }
+
+    // Clear cookies
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/'
+    };
+
+    res.clearCookie('refreshToken', cookieOptions);
+
+    res.status(200).json({
+      status: true,
+      message: "Logged out successfully"
+    });
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({
+      status: false,
+      message: "Error during logout",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 module.exports = {
   registerAUser,
   loginUser,
   getAllUsers,
   getAUser,
   updateUser,
+  refreshToken,
+  logout,
   updateUserDetails,
   deleteUser,
   blockUser,
