@@ -1,0 +1,62 @@
+version: "3.7"
+
+services:
+  app:
+    container_name: lms_app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://mongodb:27017/lms
+      - REDIS_URL=redis://redis:6379
+      - PORT=4000
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - lms-network
+
+  mongodb:
+    container_name: lms_mongodb
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - lms-network
+
+  redis:
+    container_name: lms_redis
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - lms-network
+
+  redis-commander:
+    container_name: lms_redis_commander
+    image: rediscommander/redis-commander:latest
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+      - HTTP_USER=root
+      - HTTP_PASSWORD=qwerty
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    networks:
+      - lms-network
+
+networks:
+  lms-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  redis-data:
