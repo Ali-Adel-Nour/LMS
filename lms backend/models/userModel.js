@@ -189,9 +189,9 @@ userSchema.methods.generatePasswordHint = function(password) {
   const hasNumbers = /[0-9]/.test(password);
   const hasSpecial = /[^A-Za-z0-9]/.test(password);
 
-  // Show first 2 characters and mask the rest
+  // Show first 3characters and mask the rest
   const firstChars = password.substring(0, 3);
-  const maskedPart = '*'.repeat(length - 2);
+  const maskedPart = '*'.repeat(length - 3);
 
   // Create additional hint about password composition
   let composition = [];
@@ -202,9 +202,9 @@ userSchema.methods.generatePasswordHint = function(password) {
 
   // Combine the hints
   return {
-           preview: firstChars + maskedPart,
-           length: length,
-           composition: composition
+    preview: firstChars + maskedPart,
+    length: length,
+    composition: composition
   };
 };
 
