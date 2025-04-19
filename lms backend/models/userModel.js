@@ -189,7 +189,7 @@ userSchema.methods.generatePasswordHint = function(password) {
   const hasNumbers = /[0-9]/.test(password);
   const hasSpecial = /[^A-Za-z0-9]/.test(password);
 
-  // Show first 3characters and mask the rest
+  // Show first 3 characters and mask the rest
   const firstChars = password.substring(0, 3);
   const maskedPart = '*'.repeat(length - 3);
 
