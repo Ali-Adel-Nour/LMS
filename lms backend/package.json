@@ -1,15 +1,5 @@
 {
-  "name": "lms-backend",
-  "version": "1.0.0",
-  "description": "lms plus jobportal backend using node.js express mongodb",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
-    "dev": "nodemon server.js"
-  },
   "author": "",
-  "license": "ISC",
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "body-parser": "^1.20.2",
@@ -36,8 +26,18 @@
     "slugify": "^1.6.6",
     "xss-clean": "^0.1.4"
   },
+  "description": "lms plus jobportal backend using node.js express mongodb",
   "devDependencies": {
     "chai": "^5.1.0",
     "mocha": "^10.4.0"
-  }
+  },
+  "license": "ISC",
+  "main": "index.js",
+  "name": "lms-backend",
+  "scripts": {
+    "dev": "nodemon server.js ",
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "version": "1.0.0"
 }

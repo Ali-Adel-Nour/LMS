@@ -54,6 +54,11 @@ let userSchema = new mongoose.Schema({
 
   },
 
+  passwordHint: {
+    type: Object,
+    select: false
+  },
+
   isBlocked: { // Use camelCase for consistency
     type: Boolean,
     default: false,
@@ -130,12 +135,16 @@ let userSchema = new mongoose.Schema({
 });
 
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) {
-    return next();
-  }
+  if (this.isModified('password')) {
+    // Generate password hint if not provided
+    if (!this.passwordHint) {
+      this.passwordHint = this.generatePasswordHint(this.password);
+    }
 
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+    // Hash the password
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+  }
   next();
 });
 // Password comparison method
@@ -168,6 +177,36 @@ userSchema.methods.createPasswordResetToken = async function () {
   this.passwordResetExpires = Date.now() + 30 * 60 * 1000; //10 minutes
   return resetToken
 }
+
+
+userSchema.methods.generatePasswordHint = function(password) {
+  if (!password) return null;
+
+  // Get password characteristics
+  const length = password.length;
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasNumbers = /[0-9]/.test(password);
+  const hasSpecial = /[^A-Za-z0-9]/.test(password);
+
+  // Show first 2 characters and mask the rest
+  const firstChars = password.substring(0, 3);
+  const maskedPart = '*'.repeat(length - 2);
+
+  // Create additional hint about password composition
+  let composition = [];
+  if (hasUppercase) composition.push('uppercase');
+  if (hasLowercase) composition.push('lowercase');
+  if (hasNumbers) composition.push('numbers');
+  if (hasSpecial) composition.push('special characters');
+
+  // Combine the hints
+  return {
+           preview: firstChars + maskedPart,
+           length: length,
+           composition: composition
+  };
+};
 
 
 userSchema.virtual('blockStatus').get(function() {

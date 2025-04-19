@@ -788,6 +788,77 @@ const logout = asyncHandler(async (req, res) => {
     });
   }
 });
+const getPasswordHint = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    if (!email || email.trim() === '') {
+      return res.status(400).json({
+        status: false,
+        message: 'Please provide your email!'
+      });
+    }
+
+    // Get user with passwordHint field
+    const user = await User.findOne({ email }).select('+passwordHint');
+
+    if (!user) {
+      return res.status(404).json({
+        status: false,
+        message: 'No user found with this email'
+      });
+    }
+
+    if (!user.passwordHint) {
+      return res.status(404).json({
+        status: false,
+        message: 'No password hint available'
+      });
+    }
+
+    // Format the hint message based on structured hint
+    let hintMessage = '';
+    if (typeof user.passwordHint === 'object') {
+      hintMessage = `Your password starts with: ${user.passwordHint.preview}\n`;
+      hintMessage += `Length: ${user.passwordHint.length} characters\n`;
+      hintMessage += `Contains: ${user.passwordHint.composition.join(', ')}`;
+    } else {
+      // If legacy hint format
+      hintMessage = user.passwordHint;
+    }
+
+    // Send email with the hint
+    const message = `
+      Hello ${user.firstname},
+
+      You (or someone) recently requested your LMS password hint.
+
+      You recently requested a password hint:${hintMessage}
+
+      If you still cannot remember your lms password, please reset your password or contact the support.
+
+      If you did not request this hint, please ignore this email.
+    `;
+
+    await sendEmail({
+      email: user.email,
+      subject: 'Your Password Hint Request',
+      message: message
+    });
+
+    res.status(200).json({
+      status: true,
+      message: 'Password hint sent to your email'
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      status: false,
+      message: 'Error sending password hint',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
 
 module.exports = {
   registerAUser,
@@ -804,5 +875,6 @@ module.exports = {
   unblockUser,
   updatePassword,
   forgotPasswordToken,
-  resetPassword
+  resetPassword,
+  getPasswordHint
 };

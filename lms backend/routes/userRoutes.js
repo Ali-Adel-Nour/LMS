@@ -15,7 +15,8 @@ const {
     forgotPasswordToken,
     resetPassword,
     logout,
-    refreshToken
+    refreshToken,
+    getPasswordHint
 } = require('../controllers/userCont');
 
 const { isAdmin, authMiddleware, autoUnblock, verifyBlacklist, validateRefreshToken } = require('../middleware/authMiddleware');
@@ -30,6 +31,7 @@ userRouter.post('/login', rateLimter, loginUser);
 userRouter.post('/forgot-password', rateLimter, forgotPasswordToken);
 userRouter.post('/logout', rateLimter, verifyBlacklist, logout);
 userRouter.post('/refresh-token', rateLimter, refreshToken);
+userRouter.post('/password-hint', rateLimter, getPasswordHint);
 
 
 //Get all routes
