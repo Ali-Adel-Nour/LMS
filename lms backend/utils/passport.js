@@ -3,8 +3,8 @@ const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const User = require("../models/userModel");
 
 passport.use(new GoogleStrategy({
-  clientID: "597031288770-3bdm3op7gece61h50l2p4t6olqkuf2q9.apps.googleusercontent.com",
-  clientSecret: "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",
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret:process.env.GOOGLE_CLIENT_SECRET,
   callbackURL: "http://localhost:4000/auth/google/callback",
   scope: ["profile", "email"]
 },
@@ -15,24 +15,35 @@ passport.use(new GoogleStrategy({
 
       if (user) {
         return cb(null, user);
+
       } else {
+
+        const randomPassword = crypto.randomBytes(20).toString('hex');
+
+        // Create new user with required fields
         let newUser = await User.create({
-          firstname: data.name,
-          lastname: data.given_name,
+          firstname: data.name || data.given_name || 'Google',
+          lastname: data.family_name || data.given_name || 'User',
           user_image: data.picture,
           email: data.email,
-          role: "user",
+          roles: "user",
+
+          profession: "Not specified",
+          mobile: `google_${Date.now().toString()}`,
+          password: randomPassword
         });
+
         return cb(null, newUser);
       }
     } catch (err) {
+      console.error('Google auth error:', err);
       return cb(err, null);
     }
   }
 ));
 
 passport.serializeUser((user, done) => {
-  done(null, user.id); // Assuming user.id uniquely identifies the user
+  done(null, user.id);
 });
 
 passport.deserializeUser(async (id, done) => {
@@ -42,4 +53,4 @@ passport.deserializeUser(async (id, done) => {
   } catch (err) {
     done(err, null);
   }
-});
+})

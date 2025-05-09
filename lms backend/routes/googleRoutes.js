@@ -1,7 +1,7 @@
 const googleRouter = require("express").Router()
 const passport = require("passport")
 
-const { generateToken } = require("../config/jwtToken")
+const { generateAccessToken } = require("../config/jwtToken")
 
 const User = require("../models/userModel")
 
@@ -16,7 +16,7 @@ googleRouter.get(
         res.status(200).json({
           status: true,
           message: 'Logged In Successfully',
-          token: generateToken(findUser?._id),
+          token:generateAccessToken(findUser?._id),
           role: findUser?.roles,
           username: findUser?.firstname + ' ' + findUser?.lastname,
           user_image: findUser?.user_image,
