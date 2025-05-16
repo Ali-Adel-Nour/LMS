@@ -12,7 +12,7 @@ const newsLetterRouter = require('./routes/newsLetterRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
 const contactRouter = require('./routes/contactRoutes');
 
-
+const subscriptionRouter = require('./routes/subscriptionRoutes');
 //const videoRouter = require('./routes/videoRoutes');
 
 const docRouter = require('./routes/docRoutes');
@@ -22,6 +22,8 @@ const docCatRouter = require('./routes/docCatRoutes');
 const blogRouter = require('./routes/blogRoutes');
 
 const blogCatRouter = require('./routes/blogCatRoutes');
+
+const checkoutRouter = require('./routes/checkoutRoutes');
 const courseRouter = require('./routes/courseRoutes');
 const lessonRouter = require('./routes/lessonRoutes');
 const courseCatRouter = require('./routes/courseCatRoutes');
@@ -37,6 +39,7 @@ const helmet = require('helmet');
 const sanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp')
+
 app.get('/', (req, res) => {
   res.send(`<a href="http://localhost:4000/google">Login with google</a>`);
 });
@@ -54,6 +57,9 @@ app.use(
     }),
   })
 );
+
+
+
 
 
 app.use(passport.initialize());
@@ -75,7 +81,14 @@ app.use(urlVersioning('v1'));
 
 app.use(cookieParser());
 
+
+app.use('/api/v1/webhook', express.raw({type: 'application/json'}));
+
 app.use('/api/v1/user', userRouter);
+
+app.use('/api/v1/checkout', checkoutRouter);
+
+app.use('/api/v1/subscription', subscriptionRouter);
 
 app.use('/api/v1/tutorial/category', tutCatRouter);
 app.use('/api/v1/tutorial', tutorialRouter);
