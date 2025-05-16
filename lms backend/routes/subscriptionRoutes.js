@@ -4,19 +4,22 @@ const {
   checkSubscription,
   updateSubscription,
   cancelSubscription,
-  //verifySubscriptionSession
+  verifySubscriptionSession
 } = require('../controllers/subscriptionCtrl');
 const { authMiddleware } = require('../middleware/authMiddleware');
+
+const rateLimter = require("../middleware/rateLimiter")
 
 const subscriptionRouter = express.Router();
 
 // Public routes
-subscriptionRouter.post('/create-subscription', createSubscription);
+subscriptionRouter.post('/create-subscription',authMiddleware,rateLimter,  createSubscription);
 
-// Protected routes
-subscriptionRouter.get('/check-subscription', authMiddleware, checkSubscription);
-subscriptionRouter.post('/update-subscription', authMiddleware, updateSubscription);
-subscriptionRouter.post('/cancel-subscription', authMiddleware, cancelSubscription);
-//subscriptionRouter.get('/verify-session/:sessionId', verifySubscriptionSession);
+subscriptionRouter.get('/verify-session/:sessionId', authMiddleware,rateLimter, verifySubscriptionSession);
+
+
+subscriptionRouter.get('/check-subscription', authMiddleware,rateLimter, checkSubscription);
+subscriptionRouter.post('/update-subscription', authMiddleware,rateLimter, updateSubscription);
+subscriptionRouter.post('/cancel-subscription', authMiddleware,rateLimter, cancelSubscription);
 
 module.exports = subscriptionRouter;

@@ -146,6 +146,7 @@ const verifySession = asyncHandler(async (req, res) => {
 });
 
 // Stripe webhook handler
+// Stripe webhook handler
 const handleStripeWebhook = asyncHandler(async (req, res) => {
   const signature = req.headers['stripe-signature'];
   let event;
@@ -165,24 +166,42 @@ const handleStripeWebhook = asyncHandler(async (req, res) => {
     case 'checkout.session.completed':
       const session = event.data.object;
 
-      // Create order record
-      await Order.findOneAndUpdate(
-        { 'payment.transactionId': session.id },
-        {
-          course: session.metadata.courseId,
-          user: session.metadata.userId,
-          status: 'completed',
-          payment: {
-            transactionId: session.id,
-            method: 'stripe',
-            amount: session.amount_total / 100,
-            currency: session.currency,
-            verified: true
-          }
-        },
-        { new: true, upsert: true }
-      );
+      // Check if this is a guest user checkout
+      if (session.metadata.userId === 'guest_user') {
+        // Handle guest checkout separately if needed
+        // For example, you could create an order without a user reference
+        // or associate it with a default guest user account
+        console.log('Guest user checkout completed');
+      } else {
+        // Regular user checkout
+        try {
+          // Create order record for logged-in user
+          await Order.findOneAndUpdate(
+            { 'payment.transactionId': session.id },
+            {
+              course: session.metadata.courseId,
+              user: session.metadata.userId,
+              status: 'completed',
+              payment: {
+                transactionId: session.id,
+                method: 'stripe',
+                amount: session.amount_total / 100,
+                currency: session.currency,
+                verified: true
+              }
+            },
+            { new: true, upsert: true }
+          );
 
+          // Add course to user's purchased courses
+          await User.findByIdAndUpdate(session.metadata.userId, {
+            $addToSet: { purchasedCourses: session.metadata.courseId }
+          });
+
+        } catch (error) {
+          console.error('Error processing webhook:', error);
+        }
+      }
       break;
 
     default:
@@ -191,7 +210,6 @@ const handleStripeWebhook = asyncHandler(async (req, res) => {
 
   res.json({ received: true });
 });
-
 // Create order manually for testing easier
 const createOrder = asyncHandler(async (req, res) => {
   try {

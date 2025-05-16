@@ -6,7 +6,17 @@ const validateMongodbId = require('../config/valditeMongodb');
 // Create a subscription
 const createSubscription = asyncHandler(async (req, res) => {
   const { email, priceId } = req.body;
-  const userId = req.user?._id;
+
+  // More robust user authentication check
+  let userId;
+  if (req.user && req.user._id) {
+    userId = req.user._id;
+    console.log("Authenticated user:", userId);
+  } else {
+    // Log the request object to see what's available
+    console.log("User authentication issue. Auth headers:", req.headers.authorization?.substring(0, 20));
+    console.log("Request user object:", req.user);
+  }
 
   try {
     // Get or create customer
@@ -26,10 +36,18 @@ const createSubscription = asyncHandler(async (req, res) => {
       mode: 'subscription',
       customer: customer.id,
       line_items: [{ price: priceId, quantity: 1 }],
-      metadata: { userId: userId ? userId.toString() : 'guest_user' },
-
+      metadata: {
+        userId: userId ? userId.toString() : 'guest_user',
+        email: email  // Adding email as backup identification
+      },
       success_url: `${process.env.FRONTEND_URL}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.FRONTEND_URL}/subscription/cancel`,
+    });
+
+    // Enhanced logging for debugging
+    console.log("Created session with metadata:", {
+      userId: userId ? userId.toString() : 'guest_user',
+      sessionId: session.id
     });
 
     // If user is logged in, store the pending subscription info
@@ -47,7 +65,8 @@ const createSubscription = asyncHandler(async (req, res) => {
     res.status(200).json({
       status: true,
       sessionId: session.id,
-      checkoutUrl: session.url
+      checkoutUrl: session.url,
+      isAuthenticated: !!userId  // Let frontend know if user is authenticated
     });
   } catch (error) {
     console.error('Subscription creation error:', error);
@@ -62,6 +81,7 @@ const createSubscription = asyncHandler(async (req, res) => {
 // Check subscription
 const checkSubscription = asyncHandler(async (req, res) => {
   const userId = req.user?._id;
+  const { email } = req.body; // If email is being sent in the request
 
   if (!userId) {
     return res.status(200).json({
@@ -71,6 +91,16 @@ const checkSubscription = asyncHandler(async (req, res) => {
 
   try {
     const user = await User.findById(userId);
+
+    // Add email verification
+    if (email && user.email !== email) {
+      console.log(`Email mismatch: ${email} vs ${user.email}`);
+      return res.status(403).json({
+        status: false,
+        message: "Email does not match authenticated user"
+      });
+    }
+
     if (!user?.stripe_account_id || !user?.stripeSession?.subscriptionId) {
       return res.status(200).json({ hasSubscription: false });
     }
@@ -195,71 +225,73 @@ const cancelSubscription = asyncHandler(async (req, res) => {
   }
 });
 
+// Verify subscription session
 const verifySubscriptionSession = asyncHandler(async (req, res) => {
-  const { sessionId } = req.params;
-
   try {
-    // Retrieve session from Stripe
+    const { sessionId } = req.params;
+
+
+    // Get session details from Stripe
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-    if (!session) {
-      return res.status(404).json({
+    if (!session || session.payment_status !== 'paid') {
+      return res.status(400).json({
         status: false,
-        message: 'Session not found'
+        message: 'Payment not completed'
       });
     }
 
-    // Check session status
-    if (session.payment_status !== 'paid') {
-      return res.status(200).json({
-        status: false,
-        message: 'Payment not completed',
-        session: {
-          id: session.id,
-          payment_status: session.payment_status
-        }
-      });
-    }
-
-    // Process successful subscription
-    if (session.mode === 'subscription' && session.metadata?.userId) {
-      const subscription = await stripe.subscriptions.retrieve(session.subscription);
-
-      // Update user subscription information
-      await User.findByIdAndUpdate(session.metadata.userId, {
-        'stripeSession': {
-          subscriptionId: subscription.id,
-          status: subscription.status,
-          priceId: subscription.items.data[0].price.id,
-          currentPeriodEnd: subscription.current_period_end
-        },
-        $unset: { pendingSubscription: "" }
-      });
-
+    // Handle guest user case
+    if (session.metadata.userId === 'guest_user') {
+      console.log('Guest user subscription verified');
       return res.status(200).json({
         status: true,
-        message: 'Subscription activated successfully',
+        message: 'Guest user subscription verified',
+        isGuestSubscription: true
+      });
+    }
+
+    try {
+      // Get subscription details
+      const subscription = await stripe.subscriptions.retrieve(session.subscription);
+
+      // Update user document with subscription data
+      const user = await User.findByIdAndUpdate(
+        session.metadata.userId,
+        {
+          'stripeSession': {
+            subscriptionId: subscription.id,
+            status: subscription.status,
+            priceId: subscription.items.data[0].price.id,
+            currentPeriodEnd: subscription.current_period_end
+          },
+          $unset: { pendingSubscription: "" }
+        },
+        { new: true }
+      );
+
+      res.status(200).json({
+        status: true,
+        message: 'Subscription verified successfully',
         subscription: {
           id: subscription.id,
           status: subscription.status,
-          current_period_end: subscription.current_period_end
+          currentPeriodEnd: new Date(subscription.current_period_end * 1000)
         }
       });
+    } catch (error) {
+      console.log('Session verification error:', error);
+      res.status(500).json({
+        status: false,
+        message: 'Error verifying subscription',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
-
-    return res.status(200).json({
-      status: true,
-      message: 'Session verified',
-      session: {
-        id: session.id,
-        payment_status: session.payment_status
-      }
-    });
   } catch (error) {
-    console.error('Session verification error:', error);
+    console.log('Session verification error:', error);
     res.status(500).json({
       status: false,
-      message: 'Error verifying session',
+      message: 'Error verifying subscription',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }

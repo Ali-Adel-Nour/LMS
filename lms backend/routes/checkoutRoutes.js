@@ -10,23 +10,23 @@ const {
 
 } = require('../controllers/checkoutCtrl');
 
-const { authMiddleware } = require('../middleware/authMiddleware');
+const { authMiddleware, isAdmin } = require('../middleware/authMiddleware');
 
 
+const rateLimter = require("../middleware/rateLimiter")
 
 
+checkoutRouter.post('/create-checkout-session', authMiddleware,rateLimter, checkout);
 
-checkoutRouter.post('/create-checkout-session', authMiddleware, checkout);
 
+checkoutRouter.get('/verify-session/:sessionId',authMiddleware,rateLimter, verifySession);
 
-checkoutRouter.get('/verify-session/:sessionId',authMiddleware, verifySession);
-
-checkoutRouter.get('/orders', authMiddleware,getUserOrders);
+checkoutRouter.get('/orders', authMiddleware,rateLimter,getUserOrders);
 
 // Webhook endpoint for Stripe events
 checkoutRouter.post('/webhook', handleStripeWebhook);
 
-checkoutRouter.post('/order', authMiddleware, createOrder);
+checkoutRouter.post('/order', authMiddleware,isAdmin, rateLimter,createOrder);
 
 checkoutRouter.get('/success', handleCheckoutSuccess);
 
