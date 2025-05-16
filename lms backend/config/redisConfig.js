@@ -1,14 +1,14 @@
 const redis = require('redis');
 
-// const client = redis.createClient({
-//   host: process.env.REDIS_HOST || 'redis://localhost:6379',
-//   port: process.env.REDIS_PORT || 6379,
-//   socket: { reconnectStrategy: () => 1000 }
-// });
 const client = redis.createClient({
-  url: process.env.REDIS_URL || 'redis://redis:6379',
+  host: process.env.REDIS_HOST || 'redis://localhost:6379',
+  port: process.env.REDIS_PORT || 6379,
   socket: { reconnectStrategy: () => 1000 }
 });
+// const client = redis.createClient({
+//   url: process.env.REDIS_URL || 'redis://redis:6379',
+//   socket: { reconnectStrategy: () => 1000 }
+// });
 // Connect handling
 const connectRedis = async () => {
   try {

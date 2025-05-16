@@ -8,6 +8,7 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
+    "ejs": "^3.1.10",
     "express": "^4.18.2",
     "express-async-handler": "^1.2.0",
     "express-mongo-sanitize": "^2.2.0",
@@ -24,6 +25,7 @@
     "passport-google-oauth20": "^2.0.0",
     "redis": "^4.7.0",
     "slugify": "^1.6.6",
+    "stripe": "^18.1.0",
     "xss-clean": "^0.1.4"
   },
   "description": "lms plus jobportal backend using node.js express mongodb",
