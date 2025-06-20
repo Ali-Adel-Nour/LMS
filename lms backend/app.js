@@ -27,6 +27,7 @@ const checkoutRouter = require('./routes/checkoutRoutes');
 const courseRouter = require('./routes/courseRoutes');
 const lessonRouter = require('./routes/lessonRoutes');
 const courseCatRouter = require('./routes/courseCatRoutes');
+const workWithUsRouter = require('./routes/workWithUsRoutes');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const passport = require('passport');
@@ -103,7 +104,7 @@ app.use('/api/v1/blog/category', blogCatRouter);
 app.use('/api/v1/lesson',lessonRouter)
 app.use('/api/v1/course', courseRouter);
 app.use('/api/v1/course/category', courseCatRouter);
-
+app.use('/api/v1/work-with-us', workWithUsRouter);
 
 app.use(notFound);
 app.use(globalErrorHandler);
