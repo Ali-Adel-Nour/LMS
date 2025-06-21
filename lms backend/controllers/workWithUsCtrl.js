@@ -4,6 +4,7 @@ const validateMongodbId = require('../config/valditeMongodb');
 const User = require('../models/userModel');
 const { client } = require('../config/redisConfig');
 const { default: slugify } = require('slugify');
+const ApiFeatures = require('../utils/apiFeatures');
 
 // Create a work with us application
 const postDetails = asyncHandler(async (req, res) => {
@@ -15,7 +16,7 @@ const postDetails = asyncHandler(async (req, res) => {
 
     const work = await Work.create(req.body);
 
-    res.status(200).json({
+    res.status(201).json({
       status: true,
       message: 'Work With Us Application Submitted Successfully',
       work
@@ -36,57 +37,61 @@ const postDetails = asyncHandler(async (req, res) => {
   }
 });
 
-// Get all work with us applications
+// Get all work with us applications with ApiFeatures
 const getAllApplications = asyncHandler(async (req, res) => {
   try {
-    let { page, size } = req.query;
-
-    if (!page) {
-      page = 1;
-    }
-    if (!size) {
-      size = 10;
-    }
-
-    page = parseInt(page) || 1;
-    size = parseInt(size) || 10;
-
-    page = Math.max(page, 1);
-    size = Math.max(size, 1);
-
-    const cacheKey = `work_applications:page${page}:size${size}`;
+    // Generate cache key based on query parameters
+    const queryString = JSON.stringify(req.query);
+    const cacheKey = `work_applications:${Buffer.from(queryString).toString('base64')}`;
 
     // Check cache first
-    const cachedApplications = await client.get(cacheKey);
-    if (cachedApplications) {
-      return res.status(200).json({
-        status: true,
-        page,
-        size,
-        message: 'Work Applications Fetched from Cache',
-        data: JSON.parse(cachedApplications)
-      });
+    try {
+      const cachedApplications = await client.get(cacheKey);
+      if (cachedApplications) {
+        const cachedData = JSON.parse(cachedApplications);
+        return res.status(200).json({
+          status: true,
+          message: 'Work Applications Fetched from Cache',
+          ...cachedData
+        });
+      }
+    } catch (cacheError) {
+      console.log('Cache error:', cacheError.message);
     }
 
-    const limit = parseInt(size);
-    const skip = (page - 1) * size;
+    // Get total count for pagination
+    const totalCount = await Work.countDocuments();
 
-    const applications = await Work.find().limit(limit).skip(skip).sort('-createdAt');
+    // Build query using ApiFeatures
+    const features = new ApiFeatures(Work.find(), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
 
-    // Cache the results
-    await client.setEx(cacheKey, 3600, JSON.stringify(applications));
+    const applications = await features.query;
+    const paginationInfo = features.G(totalCount);
 
-    res.status(200).json({
+    const responseData = {
       status: true,
-      page,
-      size,
-      message: 'All Work Applications Fetched Successfully',
+      message: applications.length > 0 ? 'Work Applications Fetched Successfully' : 'No Work Applications Found',
+      ...paginationInfo,
       applications
-    });
+    };
+
+    // Cache the results for 1 hour
+    try {
+      await client.setEx(cacheKey, 3600, JSON.stringify(responseData));
+    } catch (cacheError) {
+      console.log('Cache set error:', cacheError.message);
+    }
+
+    res.status(200).json(responseData);
   } catch (err) {
     res.status(500).json({
       status: false,
-      message: err.message
+      message: 'Error fetching work applications',
+      error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
     });
   }
 });
@@ -97,6 +102,21 @@ const getSingleApplication = asyncHandler(async (req, res) => {
   validateMongodbId(id);
 
   try {
+    // Check cache first
+    const cacheKey = `work_application:${id}`;
+    try {
+      const cachedApplication = await client.get(cacheKey);
+      if (cachedApplication) {
+        return res.status(200).json({
+          status: true,
+          message: 'Work Application Fetched from Cache',
+          application: JSON.parse(cachedApplication)
+        });
+      }
+    } catch (cacheError) {
+      console.log('Cache error:', cacheError.message);
+    }
+
     const application = await Work.findById(id);
 
     if (!application) {
@@ -104,6 +124,13 @@ const getSingleApplication = asyncHandler(async (req, res) => {
         status: false,
         message: 'Work Application Not Found'
       });
+    }
+
+    // Cache single application for 30 minutes
+    try {
+      await client.setEx(cacheKey, 1800, JSON.stringify(application));
+    } catch (cacheError) {
+      console.log('Cache set error:', cacheError.message);
     }
 
     res.status(200).json({
@@ -130,7 +157,10 @@ const updateApplication = asyncHandler(async (req, res) => {
       req.body.slug = slugify(req.body.title.toLowerCase());
     }
 
-    const application = await Work.findByIdAndUpdate(id, req.body, { new: true });
+    const application = await Work.findByIdAndUpdate(id, req.body, {
+      new: true,
+      runValidators: true
+    });
 
     if (!application) {
       return res.status(404).json({
@@ -139,12 +169,8 @@ const updateApplication = asyncHandler(async (req, res) => {
       });
     }
 
-    // Clear relevant cache
-    const cachePattern = 'work_applications:*';
-    const keys = await client.keys(cachePattern);
-    if (keys.length > 0) {
-      await client.del(keys);
-    }
+    // Clear relevant caches
+    await clearWorkApplicationCaches(id);
 
     res.status(200).json({
       status: true,
@@ -174,12 +200,8 @@ const deleteApplication = asyncHandler(async (req, res) => {
       });
     }
 
-    // Clear relevant cache
-    const cachePattern = 'work_applications:*';
-    const keys = await client.keys(cachePattern);
-    if (keys.length > 0) {
-      await client.del(keys);
-    }
+
+    await clearWorkApplicationCaches(id);
 
     res.status(200).json({
       status: true,
@@ -193,34 +215,63 @@ const deleteApplication = asyncHandler(async (req, res) => {
   }
 });
 
-// Get applications by status
+// Get applications by status with ApiFeatures
 const getApplicationsByStatus = asyncHandler(async (req, res) => {
   const { status } = req.params;
-  let { page, size } = req.query;
 
   try {
-    if (!page) {
-      page = 1;
+    // Add status to query parameters
+    const queryWithStatus = { ...req.query, status };
+
+    // Generate cache key
+    const queryString = JSON.stringify(queryWithStatus);
+    const cacheKey = `work_applications_status:${status}:${Buffer.from(queryString).toString('base64')}`;
+
+    // Check cache first
+    try {
+      const cachedApplications = await client.get(cacheKey);
+      if (cachedApplications) {
+        const cachedData = JSON.parse(cachedApplications);
+        return res.status(200).json({
+          status: true,
+          message: `Applications with status '${status}' fetched from cache`,
+          ...cachedData
+        });
+      }
+    } catch (cacheError) {
+      console.log('Cache error:', cacheError.message);
     }
-    if (!size) {
-      size = 10;
-    }
 
-    const limit = parseInt(size);
-    const skip = (page - 1) * size;
+    // Get total count for this status
+    const totalCount = await Work.countDocuments({ status });
 
-    const applications = await Work.find({ status })
-      .limit(limit)
-      .skip(skip)
-      .sort('-createdAt');
+    // Build query using ApiFeatures
+    const features = new ApiFeatures(Work.find({ status }), req.query)
+      .sort()
+      .limitFields()
+      .paginate();
 
-    res.status(200).json({
+    const applications = await features.query;
+    const paginationInfo = features.GetPaginationInfo(totalCount);
+
+    const responseData = {
       status: true,
-      page,
-      size,
-      message: `Applications with status '${status}' fetched successfully`,
+      message: applications.length > 0
+        ? `Applications with status '${status}' fetched successfully`
+        : `No applications found with status '${status}'`,
+      filter: { status },
+      ...paginationInfo,
       applications
-    });
+    };
+
+    // Cache the results for 30 minutes
+    try {
+      await client.setEx(cacheKey, 1800, JSON.stringify(responseData));
+    } catch (cacheError) {
+      console.log('Cache set error:', cacheError.message);
+    }
+
+    res.status(200).json(responseData);
   } catch (err) {
     res.status(500).json({
       status: false,
@@ -228,6 +279,41 @@ const getApplicationsByStatus = asyncHandler(async (req, res) => {
     });
   }
 });
+
+// Helper function to clear caches
+const clearWorkApplicationCaches = async (applicationId = null) => {
+  try {
+    // Clear all work application list caches
+    const listCachePattern = 'work_applications:*';
+    const statusCachePattern = 'work_applications_status:*';
+
+    // Get keys matching patterns
+    const listKeys = await client.keys(listCachePattern);
+    const statusKeys = await client.keys(statusCachePattern);
+
+    // Clear specific application cache if ID provided
+    if (applicationId) {
+      const singleCacheKey = `work_application:${applicationId}`;
+      try {
+        await client.del(singleCacheKey);
+      } catch (error) {
+        console.log('Error clearing single cache:', error.message);
+      }
+    }
+
+    // Clear list and status caches
+    const allKeys = [...listKeys, ...statusKeys];
+    if (allKeys.length > 0) {
+      try {
+        await client.del(allKeys);
+      } catch (error) {
+        console.log('Error clearing multiple cache keys:', error.message);
+      }
+    }
+  } catch (error) {
+    console.log('Cache clearing error:', error.message);
+  }
+};
 
 module.exports = {
   postDetails,
