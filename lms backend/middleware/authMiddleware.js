@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const asyncHandler = require('express-async-handler');
 const validateMongodbId = require('../config/valditeMongodb');
 const blackList = require('../models/blacklistModel');
+const { verifyRefreshToken } = require('../config/jwtToken');
 
 
 // Main authentication middleware - validates access token
@@ -250,8 +251,7 @@ const validateRefreshToken = asyncHandler(async (req, res, next) => {
   }
 
   try {
-    // Import the verifyRefreshToken function dynamically to avoid circular dependencies
-    const { verifyRefreshToken } = require('../config/jwtToken');
+
 
     // Verify token
     const userId = await verifyRefreshToken(token);

@@ -10,35 +10,35 @@ const User = require("../models/userModel");
 
 const Lesson = require("../models/lessonModel");
 
-
+const ApiFeatures = require('../utils/apiFeatures');
 
 const getAllCoursesByCategory = asyncHandler(async (req, res) => {
-  try{
-  const { type } = req.params;
+  try {
+    const { type } = req.params;
 
-  const courses = await Course.find({ category: type });
+    const courses = await Course.find({ category: type });
 
 
 
-  if(!type){
-    return res.status(400).json({
+    if (!type) {
+      return res.status(400).json({
+        status: false,
+        message: 'No Category Found',
+      });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: 'All Courses Fetched Successfully for particular category',
+      courses
+    });
+
+  } catch (err) {
+    res.status(500).json({
       status: false,
-      message: 'No Category Found',
+      message: err.message || 'Internal Server Error',
     });
   }
-
-  res.status(200).json({
-    status: true,
-    message: 'All Courses Fetched Successfully for particular category',
-    courses
-  });
-
-}catch(err){
-  res.status(500).json({
-    status: false,
-    message: err.message || 'Internal Server Error',
-  });
-}
 });
 
 
@@ -66,7 +66,7 @@ const postCourse = asyncHandler(async (req, res) => {
 
     validateMongodbId(instructorId)
 
-    const instructor = await User.findById(instructorId );
+    const instructor = await User.findById(instructorId);
     if (!instructor) {
       return res.status(404).json({
         status: false,
@@ -111,37 +111,62 @@ const postCourse = asyncHandler(async (req, res) => {
 
 const getAllCourses = asyncHandler(async (req, res) => {
   try {
-    let { page, size } = req.query;
+    // Generate cache key based on query parameters
+    const queryString = JSON.stringify(req.query);
+    const cacheKey = `courses:${Buffer.from(queryString).toString('base64')}`;
 
-    if (!page) {
-      page = 1;
-    }
-    if (!size) {
-      size = 10;
-    }
-
-    const limit = parseInt(size);
-    const skip = (page - 1) * size;
-
-    const courses = await Course.find().limit(limit).skip(skip);
-
-    if (!courses) {
-      res.status(400).json({
-        status: false,
-        message: 'No Course In Database',
-      });
+    // Check cache first
+    try {
+      const cachedCourses = await client.get(cacheKey);
+      if (cachedCourses) {
+        const cachedData = JSON.parse(cachedCourses);
+        return res.status(200).json({
+          status: true,
+          message: 'Courses Fetched from Cache',
+          ...cachedData
+        });
+      }
+    } catch (cacheError) {
+      console.log('Cache error:', cacheError.message);
     }
 
-    res.status(200).json({
+    // Get total count for pagination
+    const totalCount = await Course.countDocuments();
+
+    // Build query using ApiFeatures
+    const features = new ApiFeatures(Course.find(), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+
+    const courses = await features.query;
+    const paginationInfo = features.GetPaginationInfo(totalCount);
+
+    const responseData = {
       status: true,
-      page, size,
-      message: 'All Courses Fetched Successfully',
+      message: courses.length > 0 ? 'Courses Fetched Successfully' : 'No Courses Found',
+      ...paginationInfo,
       courses
-    });
+    };
+
+    // Cache the results
+    try {
+      await client.setEx(cacheKey, 3600, JSON.stringify(responseData));
+    } catch (cacheError) {
+      console.log('Cache set error:', cacheError.message);
+    }
+
+    res.status(200).json(responseData);
   } catch (err) {
-    throw new Error(err);
+    res.status(500).json({
+      status: false,
+      message: 'Error fetching courses',
+      error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+    });
   }
 });
+
 
 const getSingleCourse = asyncHandler(async (req, res) => {
   const { slug } = req.params;
