@@ -70,7 +70,7 @@ const getAllApplications = asyncHandler(async (req, res) => {
       .paginate();
 
     const applications = await features.query;
-    const paginationInfo = features.G(totalCount);
+    const paginationInfo = features.GetPaginationInfo(totalCount);
 
     const responseData = {
       status: true,
