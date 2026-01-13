@@ -5,7 +5,10 @@ const {
   deleteBookSession,
   updateBookSession,
   getUserBookSession,
-  getInstructorSession
+  getInstructorSession,
+  getMyBookSessions,
+  getMyInstructorSessions,
+  getAvailableTimeSlots
 } = require("../controllers/bookSessionsCtrl")
 const { isAdmin, authMiddleware } = require('../middleware/authMiddleware');
 const rateLimter = require("../middleware/rateLimiter")
@@ -16,13 +19,24 @@ bookSessionRouter.post("/", authMiddleware, rateLimter, createBookSession);
 
 bookSessionRouter.get("/all", authMiddleware, isAdmin, rateLimter, getAllBookSessions);
 
-bookSessionRouter.get("/:id", authMiddleware, isAdmin, rateLimter, getBookSession);
+// Get logged-in user's sessions
+bookSessionRouter.get("/my-sessions", authMiddleware, rateLimter, getMyBookSessions);
 
-bookSessionRouter.get("/users/:id", authMiddleware, isAdmin, rateLimter, getUserBookSession);
+bookSessionRouter.get("/available-time-slots", authMiddleware, rateLimter, getAvailableTimeSlots);
 
-bookSessionRouter.get("/instructors/:id", authMiddleware, isAdmin, rateLimter, getInstructorSession);
+// Get logged-in instructor's sessions
+bookSessionRouter.get("/my-instructor-sessions", authMiddleware, rateLimter, getMyInstructorSessions);
 
-bookSessionRouter.put("/:id/edit", authMiddleware , rateLimter, updateBookSession);
+// Get specific user's session by session ID (admin check if it belongs to user)
+bookSessionRouter.get("/users/:id", authMiddleware, rateLimter, getUserBookSession);
+
+// Get all sessions for a specific instructor (by instructor ID)
+bookSessionRouter.get("/instructors/:id", authMiddleware, rateLimter, getInstructorSession);
+
+// Get single session by ID
+bookSessionRouter.get("/:id", authMiddleware, rateLimter, getBookSession);
+
+bookSessionRouter.put("/:id/edit", authMiddleware, rateLimter, updateBookSession);
 
 bookSessionRouter.delete("/:id", authMiddleware, isAdmin, rateLimter, deleteBookSession);
 
