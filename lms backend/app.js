@@ -30,6 +30,7 @@ const courseCatRouter = require('./routes/courseCatRoutes');
 const workWithUsRouter = require('./routes/workWithUsRoutes');
 const projectCatRouter = require('./routes/projectCatRoutes');
 const bookSessionRouter = require('./routes/bookSessionsRoutes');
+const chatRouter = require('./routes/chatRoutes');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const passport = require('passport');
@@ -41,11 +42,15 @@ const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const sanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
-const hpp = require('hpp')
+const hpp = require('hpp');
+const path = require('path');
 
 app.get('/', (req, res) => {
   res.send(`<a href="http://localhost:4000/google">Login with google</a>`);
 });
+
+// Serve static files (for chat test page)
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 app.use(helmet());
 
@@ -109,6 +114,7 @@ app.use('/api/v1/course/category', courseCatRouter);
 app.use('/api/v1/work-with-us', workWithUsRouter);
 app.use('/api/v1/project/category', projectCatRouter);
 app.use('/api/v1/book-session', bookSessionRouter);
+app.use('/api/v1/chat', chatRouter);
 
 app.use(notFound);
 app.use(globalErrorHandler);
