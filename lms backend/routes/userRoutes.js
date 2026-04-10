@@ -27,7 +27,7 @@ const userRouter = express.Router();
 
 //Post all routes
 userRouter.post('/register', rateLimter, registerAUser);
-userRouter.post('/login', rateLimter, loginUser);
+userRouter.post('/login', loginUser);
 userRouter.post('/forgot-password', rateLimter, forgotPasswordToken);
 userRouter.post('/logout', rateLimter, verifyBlacklist, logout);
 userRouter.post('/refresh-token', rateLimter, refreshToken);
