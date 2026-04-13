@@ -31,6 +31,8 @@ const workWithUsRouter = require('./routes/workWithUsRoutes');
 const projectCatRouter = require('./routes/projectCatRoutes');
 const bookSessionRouter = require('./routes/bookSessionsRoutes');
 const chatRouter = require('./routes/chatRoutes');
+const questionRouter = require('./routes/questionRoutes');
+const answerRouter = require('./routes/answerRoutes');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const passport = require('passport');
@@ -115,6 +117,8 @@ app.use('/api/v1/work-with-us', workWithUsRouter);
 app.use('/api/v1/project/category', projectCatRouter);
 app.use('/api/v1/book-session', bookSessionRouter);
 app.use('/api/v1/chat', chatRouter);
+app.use('/api/v1/question', questionRouter);
+app.use('/api/v1/answer', answerRouter);
 
 app.use(notFound);
 app.use(globalErrorHandler);
