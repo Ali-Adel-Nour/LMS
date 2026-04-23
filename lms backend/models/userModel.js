@@ -5,13 +5,21 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 
 let userSchema = new mongoose.Schema({
+  authProvider: {
+    type: String,
+    enum: ['local', 'wallet'],
+    default: 'local',
+    index: true,
+  },
   firstname: {
     type: String,
-    required: true,
+    required: function() { return this.authProvider !== 'wallet'; },
+    default: 'Wallet',
   },
   lastname: {
     type: String,
-    required: true,
+    required: function() { return this.authProvider !== 'wallet'; },
+    default: 'User',
   },
 
   user_image: {
@@ -22,19 +30,23 @@ let userSchema = new mongoose.Schema({
 
   email: {
     type: String,
-    required: true,
+    required: function() { return this.authProvider !== 'wallet'; },
     unique: true,
     index: true,
+    sparse: true,
+    default: null,
   },
   mobile: {
     type: String,
-    required: true,
+    required: function() { return this.authProvider !== 'wallet'; },
     unique: true,
     index: true,
+    sparse: true,
+    default: null,
   },
   password: {
     type: String,
-    required: true,
+    required: function() { return this.authProvider !== 'wallet'; },
     select: false
   },
   roles: {
@@ -44,7 +56,21 @@ let userSchema = new mongoose.Schema({
 
   profession: {
     type: String,
-    required: true,
+    required: function() { return this.authProvider !== 'wallet'; },
+    default: 'wallet-user',
+  },
+  walletAddress: {
+    type: String,
+    lowercase: true,
+    trim: true,
+    unique: true,
+    sparse: true,
+    index: true,
+    default: null,
+  },
+  signatureNonce: {
+    type: String,
+    default: null,
   },
 
   active:{
@@ -59,14 +85,14 @@ let userSchema = new mongoose.Schema({
     select: false
   },
 
-  isBlocked: { // Use camelCase for consistency
+  isBlocked: { 
     type: Boolean,
     default: false,
   },
   blockDetails: {
     reason: {
       type: String,
-      validate: { // Add validation when blocked
+      validate: { 
         validator: function(v) {
           return !this.isBlocked || !!v;
         },
@@ -135,7 +161,7 @@ let userSchema = new mongoose.Schema({
 });
 
 userSchema.pre('save', async function(next) {
-  if (this.isModified('password')) {
+  if (this.password && this.isModified('password')) {
     // Generate password hint if not provided
     if (!this.passwordHint) {
       this.passwordHint = this.generatePasswordHint(this.password);
@@ -150,7 +176,7 @@ userSchema.pre('save', async function(next) {
 // Password comparison method
 userSchema.methods.isPasswordMatch = async function(enteredPassword) {
   try {
-    // Make sure password exists and is a string
+    
     if (!this.password || !enteredPassword) {
       return false;
     }
