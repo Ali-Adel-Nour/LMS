@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LMS MetaMask Web3</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card: #161b22;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #2f81f7;
+      --success: #2ea043;
+      --danger: #f85149;
+      --border: #30363d;
+    }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: radial-gradient(circle at 20% 10%, #1b2536, var(--bg));
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    h1, h2 { margin: 0 0 12px; }
+    h1 { font-size: 28px; }
+    h2 { font-size: 18px; color: var(--muted); }
+    label { display: block; margin: 8px 0 4px; color: var(--muted); }
+    input, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid var(--border);
+      background: #0f141b;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 14px;
+    }
+    textarea { min-height: 100px; }
+    .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+    button {
+      border: 0;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-right: 8px;
+      margin-top: 8px;
+    }
+    button.secondary { background: #30363d; }
+    button.success { background: var(--success); }
+    .muted { color: var(--muted); font-size: 13px; }
+    pre {
+      background: #0b0f14;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 280px;
+    }
+    .status-ok { color: var(--success); }
+    .status-bad { color: var(--danger); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>LMS MetaMask Frontend</h1>
+      <p class="muted">Connect wallet, sign nonce, login, then create and confirm USDC crypto payment.</p>
+      <div class="row">
+        <div>
+          <label>API Base URL</label>
+          <input id="baseUrl" value="http://localhost:4000/api/v1" />
+        </div>
+        <div>
+          <label>Connected Wallet</label>
+          <input id="walletAddress" placeholder="0x..." />
+        </div>
+      </div>
+      <button id="connectWalletBtn">Connect MetaMask</button>
+      <span id="walletStatus" class="muted"></span>
+    </div>
+
+    <div class="card">
+      <h2>1) Wallet Nonce + Signature Login</h2>
+      <div class="row">
+        <div>
+          <label>Email (optional)</label>
+          <input id="email" placeholder="optional for linking existing local account" />
+        </div>
+        <div>
+          <label>Bearer Token</label>
+          <input id="accessToken" placeholder="auto-filled after verify" />
+        </div>
+      </div>
+      <label>Sign Message</label>
+      <textarea id="signMessage" readonly></textarea>
+      <button id="requestNonceBtn">Request Nonce</button>
+      <button id="signMessageBtn" class="secondary">Sign Message</button>
+      <button id="verifyLoginBtn" class="success">Verify Wallet Login</button>
+    </div>
+
+    <div class="card">
+      <h2>2) Crypto Payment (USDC)</h2>
+      <div class="row">
+        <div>
+          <label>Course ID (Mongo _id)</label>
+          <input id="courseId" placeholder="e.g. 67f..." />
+        </div>
+        <div>
+          <label>Amount USDC</label>
+          <input id="amountUSDC" value="29.99" />
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Payment Intent ID</label>
+          <input id="paymentIntentId" readonly />
+        </div>
+        <div>
+          <label>Tx Hash</label>
+          <input id="paymentTxHash" readonly />
+        </div>
+      </div>
+      <button id="createIntentBtn">Create Payment Intent</button>
+      <button id="approveUsdcBtn" class="secondary">Approve USDC</button>
+      <button id="payCourseBtn" class="success">Pay Course</button>
+      <button id="confirmPaymentBtn">Confirm Payment in Backend</button>
+    </div>
+
+    <div class="card">
+      <h2>Logs</h2>
+      <pre id="logs">Ready.</pre>
+    </div>
+  </div>
+
+  <script type="module">
+    import { ethers } from "https://cdn.jsdelivr.net/npm/ethers@6.13.5/+esm";
+
+    const els = {
+      baseUrl: document.getElementById("baseUrl"),
+      walletAddress: document.getElementById("walletAddress"),
+      walletStatus: document.getElementById("walletStatus"),
+      email: document.getElementById("email"),
+      accessToken: document.getElementById("accessToken"),
+      signMessage: document.getElementById("signMessage"),
+      courseId: document.getElementById("courseId"),
+      amountUSDC: document.getElementById("amountUSDC"),
+      paymentIntentId: document.getElementById("paymentIntentId"),
+      paymentTxHash: document.getElementById("paymentTxHash"),
+      logs: document.getElementById("logs"),
+      connectWalletBtn: document.getElementById("connectWalletBtn"),
+      requestNonceBtn: document.getElementById("requestNonceBtn"),
+      signMessageBtn: document.getElementById("signMessageBtn"),
+      verifyLoginBtn: document.getElementById("verifyLoginBtn"),
+      createIntentBtn: document.getElementById("createIntentBtn"),
+      approveUsdcBtn: document.getElementById("approveUsdcBtn"),
+      payCourseBtn: document.getElementById("payCourseBtn"),
+      confirmPaymentBtn: document.getElementById("confirmPaymentBtn"),
+    };
+
+    let browserProvider;
+    let signer;
+    let signature = "";
+    let paymentContext = null;
+
+    const appendLog = (label, data) => {
+      const chunk = `[${new Date().toLocaleTimeString()}] ${label}\n${typeof data === "string" ? data : JSON.stringify(data, null, 2)}\n\n`;
+      els.logs.textContent = chunk + els.logs.textContent;
+    };
+
+    const api = async (path, method = "GET", body = null, withAuth = false) => {
+      const headers = { "Content-Type": "application/json" };
+      if (withAuth && els.accessToken.value) {
+        headers.Authorization = `Bearer ${els.accessToken.value}`;
+      }
+      const response = await fetch(`${els.baseUrl.value}${path}`, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.message || `HTTP ${response.status}`);
+      return json;
+    };
+
+    const requireWallet = async () => {
+      if (!window.ethereum) throw new Error("MetaMask not found in browser");
+      if (!browserProvider) {
+        browserProvider = new ethers.BrowserProvider(window.ethereum);
+      }
+      if (!signer) {
+        signer = await browserProvider.getSigner();
+      }
+      const addr = await signer.getAddress();
+      els.walletAddress.value = addr;
+      return addr;
+    };
+
+    els.connectWalletBtn.addEventListener("click", async () => {
+      try {
+        if (!window.ethereum) throw new Error("Please install MetaMask");
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+        await requireWallet();
+        els.walletStatus.textContent = "Connected";
+        els.walletStatus.className = "status-ok";
+        appendLog("Wallet Connected", { walletAddress: els.walletAddress.value });
+      } catch (error) {
+        els.walletStatus.textContent = error.message;
+        els.walletStatus.className = "status-bad";
+        appendLog("Wallet Connect Error", error.message);
+      }
+    });
+
+    els.requestNonceBtn.addEventListener("click", async () => {
+      try {
+        const walletAddress = await requireWallet();
+        const payload = { walletAddress };
+        if (els.email.value.trim()) payload.email = els.email.value.trim();
+
+        const data = await api("/wallet/nonce", "POST", payload, false);
+        els.signMessage.value = data.signMessage || "";
+        appendLog("Nonce Response", data);
+      } catch (error) {
+        appendLog("Request Nonce Error", error.message);
+      }
+    });
+
+    els.signMessageBtn.addEventListener("click", async () => {
+      try {
+        const walletSigner = await requireWallet();
+        if (!els.signMessage.value.trim()) throw new Error("Request nonce first");
+
+        signature = await signer.signMessage(els.signMessage.value);
+        appendLog("Message Signed", { walletSigner, signature });
+      } catch (error) {
+        appendLog("Sign Error", error.message);
+      }
+    });
+
+    els.verifyLoginBtn.addEventListener("click", async () => {
+      try {
+        const walletAddress = await requireWallet();
+        if (!signature) throw new Error("Sign message first");
+
+        const data = await api("/wallet/verify", "POST", { walletAddress, signature }, false);
+        els.accessToken.value = data.accessToken || "";
+        appendLog("Wallet Login Success", data);
+      } catch (error) {
+        appendLog("Wallet Verify Error", error.message);
+      }
+    });
+
+    els.createIntentBtn.addEventListener("click", async () => {
+      try {
+        const data = await api(
+          "/web3/payment/intent",
+          "POST",
+          {
+            courseId: els.courseId.value.trim(),
+            amountUSDC: els.amountUSDC.value.trim(),
+          },
+          true
+        );
+
+        els.paymentIntentId.value = data.paymentIntentId;
+        paymentContext = data;
+        appendLog("Payment Intent Created", data);
+      } catch (error) {
+        appendLog("Create Intent Error", error.message);
+      }
+    });
+
+    els.approveUsdcBtn.addEventListener("click", async () => {
+      try {
+        if (!paymentContext) throw new Error("Create payment intent first");
+        await requireWallet();
+
+        const usdcAbi = ["function approve(address spender,uint256 amount) external returns (bool)"];
+        const usdc = new ethers.Contract(paymentContext.contracts.usdc, usdcAbi, signer);
+
+        const approveTx = await usdc.approve(paymentContext.contracts.payment, paymentContext.amountInBaseUnits);
+        appendLog("USDC Approve Sent", { txHash: approveTx.hash });
+        const receipt = await approveTx.wait();
+        appendLog("USDC Approve Confirmed", { blockNumber: receipt.blockNumber, txHash: receipt.hash });
+      } catch (error) {
+        appendLog("Approve Error", error.message);
+      }
+    });
+
+    els.payCourseBtn.addEventListener("click", async () => {
+      try {
+        if (!paymentContext) throw new Error("Create payment intent first");
+        await requireWallet();
+
+        const paymentAbi = ["function payForCourse(string courseId,uint256 amount) external"];
+        const paymentContract = new ethers.Contract(paymentContext.contracts.payment, paymentAbi, signer);
+
+        const tx = await paymentContract.payForCourse(paymentContext.courseCode, paymentContext.amountInBaseUnits);
+        els.paymentTxHash.value = tx.hash;
+        appendLog("Payment Tx Sent", { txHash: tx.hash });
+
+        const receipt = await tx.wait();
+        appendLog("Payment Tx Confirmed", { txHash: receipt.hash, blockNumber: receipt.blockNumber });
+      } catch (error) {
+        appendLog("Pay Course Error", error.message);
+      }
+    });
+
+    els.confirmPaymentBtn.addEventListener("click", async () => {
+      try {
+        if (!els.paymentIntentId.value.trim()) throw new Error("paymentIntentId missing");
+        if (!els.paymentTxHash.value.trim()) throw new Error("paymentTxHash missing");
+
+        const data = await api(
+          "/web3/payment/confirm",
+          "POST",
+          {
+            paymentIntentId: els.paymentIntentId.value.trim(),
+            txHash: els.paymentTxHash.value.trim(),
+          },
+          true
+        );
+
+        appendLog("Payment Confirmed in Backend", data);
+      } catch (error) {
+        appendLog("Confirm Payment Error", error.message);
+      }
+    });
+  </script>
+</body>
+</html>

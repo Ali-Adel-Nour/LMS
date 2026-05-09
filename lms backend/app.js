@@ -33,6 +33,8 @@ const bookSessionRouter = require('./routes/bookSessionsRoutes');
 const chatRouter = require('./routes/chatRoutes');
 const questionRouter = require('./routes/questionRoutes');
 const answerRouter = require('./routes/answerRoutes');
+const walletRouter = require('./routes/walletRoutes');
+const web3Router = require('./routes/web3Routes');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const passport = require('passport');
@@ -119,6 +121,8 @@ app.use('/api/v1/book-session', bookSessionRouter);
 app.use('/api/v1/chat', chatRouter);
 app.use('/api/v1/question', questionRouter);
 app.use('/api/v1/answer', answerRouter);
+app.use('/api/v1/wallet', walletRouter);
+app.use('/api/v1/web3', web3Router);
 
 app.use(notFound);
 app.use(globalErrorHandler);

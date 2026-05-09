@@ -1,6 +1,7 @@
 {
   "author": "",
   "dependencies": {
+    "@openzeppelin/contracts": "^4.9.6",
     "bcryptjs": "^3.0.2",
     "body-parser": "^1.20.2",
     "busboy": "^1.6.0",
@@ -9,6 +10,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "ejs": "^3.1.10",
+    "ethers": "^6.13.5",
     "express": "^4.18.2",
     "express-async-handler": "^1.2.0",
     "express-mongo-sanitize": "^2.2.0",
@@ -31,7 +33,9 @@
   },
   "description": "lms plus jobportal backend using node.js express mongodb",
   "devDependencies": {
-    "chai": "^5.1.0",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "chai": "^4.4.1",
+    "hardhat": "^2.22.17",
     "mocha": "^10.4.0"
   },
   "license": "ISC",
@@ -39,6 +43,8 @@
   "name": "lms-backend",
   "scripts": {
     "dev": "nodemon server.js ",
+    "chain:compile": "hardhat compile --config blockchain/hardhat.config.js",
+    "chain:deploy:sepolia": "hardhat run blockchain/scripts/deploy.js --network sepolia --config blockchain/hardhat.config.js",
     "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
